@@ -1,0 +1,30 @@
+[package]
+name = "Lobic"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+axum = { version = "0.7.9", features = ["ws"] }
+axum-extra = { version = "0.9.6", features = ["cookie"] }
+colored = "2.1.0"
+cookie = "0.18.1"
+diesel = { version = "2.2.6", features = ["sqlite", "r2d2"] }
+diesel_migrations = "2.0"
+dotenv = "0.15.0"
+futures = "0.3.31"
+id3 = "1.16.0"
+jsonwebtoken = "9.3.0"
+pwhash = "1.0.0"
+serde = { version = "1.0.215", features = ["derive"] }
+serde_json = "1.0.133"
+time = "0.3.36"
+tokio = { version = "1.41.1", features = ["full"] }
+tokio-util = { version = "0.7.13", features = ["io"] }
+tower-http = { version = "0.6.2", features = ["cors", "trace"] }
+tracing = "0.1.40"
+tracing-subscriber = "0.3.18"
+uuid = { version = "1.11.0", features = ["v4"] }
+rusqlite = { version = "0.32.0", features = ["bundled"] }
+walkdir = "2.5.0"
+chrono = "0.4.39"
+strsim = "0.11.1"

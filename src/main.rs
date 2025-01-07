@@ -2,14 +2,8 @@
  * TODO:
  * [ ] Implement Leave and Delete lobby
  * [ ] Implement auto deletion when host disconnects
- * [ ] Implement AppState functionality to routes
  * [ ] Implement verify route as middleware (if needed)
  */
-
-// TODO:
-// When joining the ws send JOIN OpCode with user_id
-// Store the { user_id: broadcast } in hashmap
-// Change the lobby client storage to only store id and use the sender from the above mentioned hashmap
 
 mod app_state;
 mod config;

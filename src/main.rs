@@ -20,7 +20,7 @@ use routes::{
 	get_music::{get_cover_image, get_music, send_music},
 	get_user::get_user,
 	login::login,
-	playlist::{add_song_to_playlist, create_playlist},
+	playlist::{add_song_to_playlist, create_playlist, get_playlist_music},
 	save_music::save_music,
 	search::search_music,
 	signup::signup,
@@ -129,6 +129,7 @@ async fn main() {
 		.route("/search", get(search_music))
 		.route("/playlist/new", post(create_playlist))
 		.route("/playlist/add_song", post(add_song_to_playlist))
+		.route("/playlist/get_by_uuid", get(get_playlist_music))
 		.route("/ws", get(websocket_handler))
 		.with_state(app_state)
 		.layer(axum::middleware::from_fn(logger))

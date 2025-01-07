@@ -1,5 +1,14 @@
-use crate::app_state::AppState;
-use axum::{extract::State, http::status::StatusCode, response::Response, Json};
+use crate::{
+	app_state::AppState,
+	schema::{music, playlist_songs},
+};
+use axum::{
+	body::Body,
+	extract::{Path, Query, State},
+	http::{header, status::StatusCode},
+	response::{IntoResponse, Response},
+	Json,
+};
 use chrono::Utc;
 use diesel::prelude::*;
 
@@ -139,3 +148,62 @@ post : http://127.0.0.1:8080/playlist/add_song
    "music_id": "b846a188-46a9-4fa4-bb7b-1b1527e7f5bd", //must be valid
 }
 */
+
+#[derive(Debug, Serialize, Deserialize, Queryable)]
+pub struct PlaylistMusicResponse {
+	pub music_id: String,
+	pub artist: String,
+	pub title: String,
+	pub album: String,
+	pub genre: String,
+	pub position: i32,
+	pub song_added_date_time: String,
+}
+#[derive(Debug, Deserialize, Queryable)]
+pub struct PlaylistQueryParams {
+	pub playlist_id: String,
+}
+
+// http://127.0.0.1:8080/playlist/get_by_uuid/?playlist_id=71780897-79bf-488d-9e82-4aaad3561986
+pub async fn get_playlist_music(
+	State(app_state): State<AppState>,
+	Query(params): Query<PlaylistQueryParams>,
+) -> Response<Body> {
+	let mut db_conn = match app_state.db_pool.get() {
+		Ok(conn) => conn,
+		Err(err) => {
+			return Response::builder()
+				.status(StatusCode::INTERNAL_SERVER_ERROR)
+				.body(Body::from(format!("Failed to get DB connection: {}", err)))
+				.unwrap();
+		}
+	};
+
+	use crate::schema::{music, playlist_songs};
+
+	let query = playlist_songs::table
+		.filter(playlist_songs::playlist_id.eq(&params.playlist_id))
+		.inner_join(music::table)
+		.select((
+			music::music_id,
+			music::artist,
+			music::title,
+			music::album,
+			music::genre,
+			playlist_songs::position,
+			playlist_songs::song_added_date_time,
+		))
+		.into_boxed();
+
+	match query.load::<PlaylistMusicResponse>(&mut db_conn) {
+		Ok(music_list) => Response::builder()
+			.status(StatusCode::OK)
+			.header(header::CONTENT_TYPE, "application/json")
+			.body(Body::from(serde_json::to_string(&music_list).unwrap()))
+			.unwrap(),
+		Err(err) => Response::builder()
+			.status(StatusCode::INTERNAL_SERVER_ERROR)
+			.body(Body::from(format!("Failed to query playlist music: {}", err)))
+			.unwrap(),
+	}
+}

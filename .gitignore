@@ -26,6 +26,7 @@ dist-ssr
 
 # Added by cargo
 /target
+#ah ah
 
 #added by rain
 /cover_images

@@ -1,12 +1,9 @@
-use crate::{
-	app_state::AppState,
-	schema::{music, playlist_songs},
-};
+use crate::app_state::AppState;
 use axum::{
 	body::Body,
-	extract::{Path, Query, State},
+	extract::{Query, State},
 	http::{header, status::StatusCode},
-	response::{IntoResponse, Response},
+	response::Response,
 	Json,
 };
 use chrono::Utc;

@@ -4,7 +4,9 @@ pub mod music {
 	pub mod search_music;
 }
 pub mod playlist {
-	pub mod playlist;
+	pub mod add_song_to_playlist;
+	pub mod create_new_playlist;
+	pub mod get_playlist_music;
 }
 pub mod get_user;
 pub mod auth {

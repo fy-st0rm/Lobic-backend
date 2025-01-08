@@ -8,7 +8,10 @@ use crate::{
 			save_music::save_music,
 			search_music::search_music,
 		},
-		playlist::playlist::{add_song_to_playlist, create_playlist, get_playlist_music},
+		playlist::{
+			add_song_to_playlist::add_song_to_playlist, create_new_playlist::create_playlist,
+			get_playlist_music::get_playlist_music,
+		},
 		socket::websocket_handler,
 	},
 };

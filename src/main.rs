@@ -1,3 +1,10 @@
+/*
+ * TODO:
+ * [ ] Implement Leave and Delete lobby
+ * [ ] Implement auto deletion when host disconnects
+ * [ ] Implement verify route as middleware (if needed)
+*/
+
 mod api;
 mod app_state;
 mod config;

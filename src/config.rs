@@ -22,6 +22,17 @@ pub enum OpCode {
 	MESSAGE,
 	#[allow(non_camel_case_types)]
 	GET_MESSAGES,
+	#[allow(non_camel_case_types)]
+	SET_MUSIC_STATE,
+	#[allow(non_camel_case_types)]
+	SYNC_MUSIC,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub enum MusicState {
+	PLAYING,
+	PAUSE,
+	CHANGE,
 }
 
 pub fn allowed_origins(origin: &HeaderValue, _request: &Parts) -> bool {

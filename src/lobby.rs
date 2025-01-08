@@ -1,4 +1,4 @@
-use crate::config::OpCode;
+use crate::config::{MusicState, OpCode};
 use crate::lobic_db::db::*;
 use crate::user_pool::UserPool;
 use crate::utils::timestamp;
@@ -18,12 +18,37 @@ pub struct ChatValue {
 }
 type Chat = Vec<ChatValue>;
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Music {
+	pub id: String,
+	pub title: String,
+	pub artist: String,
+	pub cover_img: String,
+	pub timestamp: f64,
+	pub state: MusicState,
+}
+
+impl Music {
+	pub fn new() -> Music {
+		Music {
+			id: String::new(),
+			title: String::new(),
+			artist: String::new(),
+			cover_img: String::new(),
+			timestamp: 0.0,
+			state: MusicState::PAUSE,
+		}
+	}
+}
+
 #[derive(Debug, Clone)]
 pub struct Lobby {
 	pub id: String,
 	pub host_id: String,
 	pub clients: Vec<String>,
 	pub chat: Chat,
+	// TODO: Introduce queue when implemented
+	pub music: Music,
 }
 
 #[derive(Debug, Clone)]
@@ -83,6 +108,7 @@ impl LobbyPool {
 			host_id: host_id.to_string(),
 			clients: vec![host_id.to_string()],
 			chat: Vec::new(),
+			music: Music::new(),
 		};
 		self.insert(&lobby_id, lobby);
 
@@ -199,6 +225,22 @@ impl LobbyPool {
 			message: msg.to_string(),
 			timestamp: timestamp::now(),
 		});
+		Ok(())
+	}
+
+	pub fn set_music_state(&self, lobby_id: &str, user_id: &str, music: Music) -> Result<(), String> {
+		let mut inner = self.inner.lock().unwrap();
+		let lobby = match inner.get_mut(lobby_id) {
+			Some(lobby) => lobby,
+			None => {
+				return Err(format!("Invalid lobby id: {}", lobby_id));
+			}
+		};
+
+		if lobby.host_id != user_id {
+			return Err(format!("User {} is not the host of lobby {}", user_id, lobby_id));
+		}
+		lobby.music = music;
 		Ok(())
 	}
 }

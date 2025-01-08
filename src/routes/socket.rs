@@ -1,5 +1,5 @@
 use crate::app_state::AppState;
-use crate::config::OpCode;
+use crate::config::{MusicState, OpCode};
 use crate::lobby::*;
 use crate::lobic_db::db::*;
 use crate::user_pool::UserPool;
@@ -358,6 +358,206 @@ fn handle_get_lobby_ids(tx: &broadcast::Sender<Message>, lobby_pool: &LobbyPool)
 	let _ = tx.send(Message::Text(response));
 }
 
+fn handle_set_music_state(
+	tx: &broadcast::Sender<Message>,
+	value: &Value,
+	lobby_pool: &LobbyPool,
+	user_pool: &UserPool,
+) {
+	let lobby_id = match value.get("lobby_id") {
+		Some(v) => v.as_str().unwrap(),
+		None => {
+			let response = json!({
+				"op_code": OpCode::ERROR,
+				"value": "\"lobby_id\" field is missing.".to_string()
+			})
+			.to_string();
+			let _ = tx.send(Message::Text(response));
+			return;
+		}
+	};
+
+	let user_id = match value.get("user_id") {
+		Some(v) => v.as_str().unwrap(),
+		None => {
+			let response = json!({
+				"op_code": OpCode::ERROR,
+				"value": "\"user_id\" field is missing.".to_string()
+			})
+			.to_string();
+			let _ = tx.send(Message::Text(response));
+			return;
+		}
+	};
+
+	let music_id = match value.get("music_id") {
+		Some(v) => v.as_str().unwrap(),
+		None => {
+			let response = json!({
+				"op_code": OpCode::ERROR,
+				"value": "\"music_id\" field is missing.".to_string()
+			})
+			.to_string();
+			let _ = tx.send(Message::Text(response));
+			return;
+		}
+	};
+
+	let title = match value.get("title") {
+		Some(v) => v.as_str().unwrap(),
+		None => {
+			let response = json!({
+				"op_code": OpCode::ERROR,
+				"value": "\"title\" field is missing.".to_string()
+			})
+			.to_string();
+			let _ = tx.send(Message::Text(response));
+			return;
+		}
+	};
+
+	let artist = match value.get("artist") {
+		Some(v) => v.as_str().unwrap(),
+		None => {
+			let response = json!({
+				"op_code": OpCode::ERROR,
+				"value": "\"artist\" field is missing.".to_string()
+			})
+			.to_string();
+			let _ = tx.send(Message::Text(response));
+			return;
+		}
+	};
+
+	let cover_img = match value.get("cover_img") {
+		Some(v) => v.as_str().unwrap(),
+		None => {
+			let response = json!({
+				"op_code": OpCode::ERROR,
+				"value": "\"cover_img\" field is missing.".to_string()
+			})
+			.to_string();
+			let _ = tx.send(Message::Text(response));
+			return;
+		}
+	};
+
+	let timestamp: f64 = match value.get("timestamp") {
+		Some(v) => v.as_f64().unwrap(),
+		None => {
+			let response = json!({
+				"op_code": OpCode::ERROR,
+				"value": "\"timestamp\" field is missing.".to_string()
+			})
+			.to_string();
+			let _ = tx.send(Message::Text(response));
+			return;
+		}
+	};
+
+	let state: MusicState = match value.get("state") {
+		Some(v) => serde_json::from_value::<MusicState>(v.clone()).unwrap(),
+		None => {
+			let response = json!({
+				"op_code": OpCode::ERROR,
+				"value": "\"state\" field is missing.".to_string()
+			})
+			.to_string();
+			let _ = tx.send(Message::Text(response));
+			return;
+		}
+	};
+
+	let music = Music {
+		id: music_id.to_string(),
+		title: title.to_string(),
+		artist: artist.to_string(),
+		cover_img: cover_img.to_string(),
+		timestamp: timestamp,
+		state: state,
+	};
+
+	match lobby_pool.set_music_state(lobby_id, user_id, music) {
+		Ok(_) => (),
+		Err(err) => {
+			let response = json!({
+				"op_code": OpCode::ERROR,
+				"value": err
+			})
+			.to_string();
+			let _ = tx.send(Message::Text(response));
+			return;
+		}
+	};
+
+	// NOTE: We donot notify the host if we sucessfully set the state or not
+	let lobby = lobby_pool.get(lobby_id).unwrap();
+	let music = lobby.music;
+
+	// Sending the sync request to every client in lobby
+	for client_id in lobby.clients {
+		if client_id == user_id {
+			continue;
+		}
+
+		let response = json!({
+			"op_code": OpCode::OK,
+			"for": OpCode::SYNC_MUSIC,
+			"value": music,
+		})
+		.to_string();
+
+		let client_conn = match user_pool.get(&client_id) {
+			Some(conn) => conn,
+			None => {
+				let response = json!({
+					"op_code": OpCode::ERROR,
+					"value": format!("Cannot find user {} in a lobby {} (in \"handle_message\" this shouldnt occure)", client_id, lobby_id)
+				}).to_string();
+				let _ = tx.send(Message::Text(response));
+				return;
+			}
+		};
+		let _ = client_conn.send(Message::Text(response));
+	}
+}
+
+fn handle_sync_music(tx: &broadcast::Sender<Message>, value: &Value, lobby_pool: &LobbyPool) {
+	let lobby_id = match value.get("lobby_id") {
+		Some(v) => v.as_str().unwrap(),
+		None => {
+			let response = json!({
+				"op_code": OpCode::ERROR,
+				"value": "\"lobby_id\" field is missing.".to_string()
+			})
+			.to_string();
+			let _ = tx.send(Message::Text(response));
+			return;
+		}
+	};
+
+	let lobby = match lobby_pool.get(lobby_id) {
+		Some(lobby) => lobby,
+		None => {
+			let response = json!({
+				"op_code": OpCode::ERROR,
+				"value": format!("Invalid lobby id: {}", lobby_id)
+			})
+			.to_string();
+			let _ = tx.send(Message::Text(response));
+			return;
+		}
+	};
+
+	let music = lobby.music;
+	let response = json!({
+		"op_code": OpCode::SYNC_MUSIC,
+		"value": music
+	})
+	.to_string();
+	let _ = tx.send(Message::Text(response));
+}
+
 pub async fn handle_socket(socket: WebSocket, State(app_state): State<AppState>) {
 	let (mut sender, mut receiver) = socket.split();
 	let (tx, mut rx) = broadcast::channel(100);
@@ -391,6 +591,8 @@ pub async fn handle_socket(socket: WebSocket, State(app_state): State<AppState>)
 					OpCode::MESSAGE => handle_message(&tx, &payload.value, &db_pool, &lobby_pool, &user_pool),
 					OpCode::GET_MESSAGES => handle_get_messages(&tx, &payload.value, &lobby_pool),
 					OpCode::GET_LOBBY_IDS => handle_get_lobby_ids(&tx, &lobby_pool),
+					OpCode::SET_MUSIC_STATE => handle_set_music_state(&tx, &payload.value, &lobby_pool, &user_pool),
+					OpCode::SYNC_MUSIC => handle_sync_music(&tx, &payload.value, &lobby_pool),
 					_ => (),
 				};
 			}

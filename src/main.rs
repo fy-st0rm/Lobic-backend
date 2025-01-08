@@ -19,23 +19,29 @@ use api::migrations::run_migrations;
 use app_state::AppState;
 use config::{IP, PORT};
 use dotenv::dotenv;
+use std::fs;
 
 #[tokio::main]
 async fn main() {
-	dotenv().ok();
-	tracing_subscriber::fmt().pretty().init();
+    // Ensure the storage directory exists
+	if !fs::metadata("storage/").is_ok() {
+        fs::create_dir("storage/").expect("Failed to create storage directory");
+    }
 
-	let db_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set in .env file");
-	run_migrations(&db_url);
+    dotenv().ok();
+    tracing_subscriber::fmt().pretty().init();
 
-	// Creating the global state
-	let app_state = AppState::new();
+    let db_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set in .env file");
+    run_migrations(&db_url);
 
-	// Configure routes
-	let app = api::routes::configure_routes(app_state)
-		.layer(axum::middleware::from_fn(api::server::logger))
-		.layer(api::server::configure_cors());
+    // Creating the global state
+    let app_state = AppState::new();
 
-	// Start the server
-	api::server::start_server(app, &IP, &PORT).await;
+    // Configure routes
+    let app = api::routes::configure_routes(app_state)
+        .layer(axum::middleware::from_fn(api::server::logger))
+        .layer(api::server::configure_cors());
+
+    // Start the server
+    api::server::start_server(app, &IP, &PORT).await;
 }

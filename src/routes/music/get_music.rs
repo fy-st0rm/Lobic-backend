@@ -82,12 +82,12 @@ pub async fn get_music(State(app_state): State<AppState>, Query(params): Query<M
 			let responses: Vec<MusicResponse> = music_entries
 				.into_iter()
 				.map(|entry| {
-					let cover_art_path = format!("./cover_images/{}.png", entry.music_id);
+					let cover_art_path = format!("./storage/cover_images/{}.png", entry.music_id);
 					let has_cover = fs::metadata(&cover_art_path).is_ok();
 
 					MusicResponse {
 						id: entry.music_id.clone(),
-						filename: { format!("./music_db/{}.mp3", entry.music_id) },
+						filename: { format!("./storage/music_db/{}.mp3", entry.music_id) },
 						artist: entry.artist,
 						title: entry.title,
 						album: entry.album,
@@ -122,7 +122,7 @@ pub async fn get_music(State(app_state): State<AppState>, Query(params): Query<M
 
 pub async fn get_cover_image(Path(filename): Path<String>) -> impl IntoResponse {
 	// Construct the path to the cover image
-	let mut path = PathBuf::from("cover_images");
+	let mut path = PathBuf::from("storage/cover_images");
 	path.push(&filename);
 
 	// Open the file
@@ -160,7 +160,7 @@ pub async fn send_music(Path(music_id): Path<String>, // Extract `path` from the
 ) -> impl IntoResponse {
 	// Open the file
 
-	let mut path = PathBuf::from("music_db");
+	let mut path = PathBuf::from("storage/music_db");
 	path.push(format!("{}.mp3", music_id));
 
 	let mut file = match File::open(&path).await {

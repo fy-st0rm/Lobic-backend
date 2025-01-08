@@ -7,6 +7,7 @@ pub mod playlist {
 	pub mod add_song_to_playlist;
 	pub mod create_new_playlist;
 	pub mod get_playlist_music;
+	pub mod get_users_playlists;
 }
 pub mod get_user;
 pub mod auth {

@@ -22,7 +22,7 @@ pub struct Music {
 	pub genre: String,
 }
 
-#[derive(Insertable, Queryable, Debug)]
+#[derive(Insertable, Queryable, Debug,Selectable,Serialize,Deserialize)]
 #[diesel(table_name = playlists)]
 pub struct Playlist {
 	pub playlist_id: String,

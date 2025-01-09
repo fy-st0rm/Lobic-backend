@@ -1,15 +1,24 @@
 use crate::{
-	app_state::AppState,
+	core::app_state::AppState,
 	routes::{
-		auth::{login::login, signup::signup, verify::verify},
+		auth::{
+			login::login,
+			signup::signup,
+			verify::verify
+		},
 		get_user::get_user,
 		music::{
-			get_music::{get_cover_image, get_music, send_music},
+			get_music::{
+				get_cover_image,
+				get_music,
+				send_music
+			},
 			save_music::save_music,
 			search_music::search_music,
 		},
 		playlist::{
-			add_song_to_playlist::add_song_to_playlist, create_new_playlist::create_playlist,
+			add_song_to_playlist::add_song_to_playlist,
+			create_new_playlist::create_playlist,
 			get_playlist_music::get_playlist_music,
 		},
 		socket::websocket_handler,

@@ -1,6 +1,6 @@
-use crate::lobby::LobbyPool;
+use crate::core::lobby::LobbyPool;
+use crate::core::user_pool::UserPool;
 use crate::lobic_db::db::*;
-use crate::user_pool::UserPool;
 
 #[derive(Debug, Clone)]
 pub struct AppState {

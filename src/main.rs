@@ -5,18 +5,17 @@
  * [ ] Implement verify route as middleware (if needed)
 */
 
-mod api;
-mod app_state;
+mod core;
 mod config;
-mod lobby;
 mod lobic_db;
 mod routes;
 mod schema;
-mod user_pool;
 mod utils;
 
-use api::migrations::run_migrations;
-use app_state::AppState;
+use core::{
+	migrations::run_migrations,
+	app_state::AppState,
+};
 use config::{IP, PORT};
 use dotenv::dotenv;
 
@@ -32,10 +31,10 @@ async fn main() {
 	let app_state = AppState::new();
 
 	// Configure routes
-	let app = api::routes::configure_routes(app_state)
-		.layer(axum::middleware::from_fn(api::server::logger))
-		.layer(api::server::configure_cors());
+	let app = core::routes::configure_routes(app_state)
+		.layer(axum::middleware::from_fn(core::server::logger))
+		.layer(core::server::configure_cors());
 
 	// Start the server
-	api::server::start_server(app, &IP, &PORT).await;
+	core::server::start_server(app, &IP, &PORT).await;
 }

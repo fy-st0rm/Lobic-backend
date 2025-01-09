@@ -1,4 +1,4 @@
-use crate::app_state::AppState;
+use crate::core::app_state::AppState;
 use axum::{
 	body::Body,
 	extract::{Query, State},

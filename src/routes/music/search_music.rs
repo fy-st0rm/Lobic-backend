@@ -110,7 +110,7 @@ pub async fn search_music(State(app_state): State<AppState>, Query(params): Quer
 		.into_iter()
 		.take(no_results)
 		.map(|(entry, _)| {
-			let cover_art_path = format!("./cover_images/{}.png", entry.music_id);
+			let cover_art_path = format!("./storage/cover_images/{}.png", entry.music_id);
 			let has_cover = fs::metadata(&cover_art_path).is_ok();
 
 			MusicResponse {

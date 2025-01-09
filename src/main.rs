@@ -5,22 +5,25 @@
  * [ ] Implement verify route as middleware (if needed)
 */
 
-mod core;
 mod config;
+mod core;
 mod lobic_db;
 mod routes;
 mod schema;
 mod utils;
 
-use core::{
-	migrations::run_migrations,
-	app_state::AppState,
-};
 use config::{IP, PORT};
+use core::{app_state::AppState, migrations::run_migrations};
 use dotenv::dotenv;
+use std::fs;
 
 #[tokio::main]
 async fn main() {
+	// Ensure the storage directory exists
+	if !fs::metadata("storage/").is_ok() {
+		fs::create_dir("storage/").expect("Failed to create storage directory");
+	}
+
 	dotenv().ok();
 	tracing_subscriber::fmt().pretty().init();
 

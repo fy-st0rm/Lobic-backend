@@ -1,5 +1,5 @@
 use crate::{
-	app_state::AppState,
+	core::app_state::AppState,
 	routes::{
 		auth::{login::login, signup::signup, verify::verify},
 		get_user::get_user,
@@ -9,10 +9,8 @@ use crate::{
 			search_music::search_music,
 		},
 		playlist::{
-			add_song_to_playlist::add_song_to_playlist, 
-			create_new_playlist::create_playlist,
-			get_playlist_music::get_playlist_music,
-			get_users_playlists::get_users_playlists
+			add_song_to_playlist::add_song_to_playlist, create_new_playlist::create_playlist,
+			get_playlist_music::get_playlist_music, get_users_playlists::get_users_playlists,
 		},
 		socket::websocket_handler,
 	},
@@ -38,7 +36,6 @@ pub fn configure_routes(app_state: AppState) -> Router {
 		.route("/playlist/add_song", post(add_song_to_playlist))
 		.route("/playlist/get_by_uuid", get(get_playlist_music))
 		.route("/playlist/get_users_playlists", get(get_users_playlists))
-
 		.route("/ws", get(websocket_handler))
 		.with_state(app_state)
 }

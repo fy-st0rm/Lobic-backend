@@ -1,4 +1,4 @@
-use crate::app_state::AppState;
+use crate::core::app_state::AppState;
 use crate::lobic_db::models::Playlist;
 use axum::{extract::State, http::status::StatusCode, response::Response, Json};
 use chrono::Utc;

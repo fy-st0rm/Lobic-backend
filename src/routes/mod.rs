@@ -9,7 +9,10 @@ pub mod playlist {
 	pub mod get_playlist_music;
 	pub mod get_users_playlists;
 }
-pub mod get_user;
+pub mod users {
+	pub mod get_user;
+	pub mod update_pfp;
+}
 pub mod auth {
 	pub mod login;
 	pub mod signup;

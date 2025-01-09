@@ -1,6 +1,6 @@
 use crate::core::app_state::AppState;
 use crate::lobic_db::models::Playlist;
-use axum::{extract::Query, extract::State, http::status::StatusCode, response::Response, Json};
+use axum::{extract::Query, extract::State, http::status::StatusCode, response::Response};
 use diesel::prelude::*;
 use serde::Deserialize;
 use serde::Serialize;

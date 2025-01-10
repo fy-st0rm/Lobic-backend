@@ -6,9 +6,8 @@ use axum::{
 	response::Response,
 };
 use diesel::prelude::*;
-
 use serde::{Deserialize, Serialize};
-//get : http://127.0.0.1:8080/playlist/get_by_uuid/?playlist_id=71780897-79bf-488d-9e82-4aaad3561986
+
 #[derive(Debug, Serialize, Deserialize, Queryable)]
 pub struct PlaylistMusicResponse {
 	pub music_id: String,
@@ -19,12 +18,19 @@ pub struct PlaylistMusicResponse {
 	pub position: i32,
 	pub song_added_date_time: String,
 }
+
 #[derive(Debug, Deserialize, Queryable)]
 pub struct PlaylistQueryParams {
 	pub playlist_id: String,
 }
 
-//get all songs in the playlist by playlist_id
+use crate::lobic_db::models::Playlist;
+#[derive(Debug, Serialize)]
+pub struct PlaylistDetailsResponse {
+	pub playlist: Playlist,
+	pub songs: Vec<PlaylistMusicResponse>,
+}
+
 pub async fn get_playlist_music(
 	State(app_state): State<AppState>,
 	Query(params): Query<PlaylistQueryParams>,
@@ -39,9 +45,25 @@ pub async fn get_playlist_music(
 		}
 	};
 
-	use crate::schema::{music, playlist_songs};
+	use crate::schema::{music, playlist_songs, playlists};
 
-	let query = playlist_songs::table
+	// Fetch playlist details
+	let playlist_result = playlists::table
+		.filter(playlists::playlist_id.eq(&params.playlist_id))
+		.first::<Playlist>(&mut db_conn);
+
+	let playlist = match playlist_result {
+		Ok(playlist) => playlist,
+		Err(err) => {
+			return Response::builder()
+				.status(StatusCode::INTERNAL_SERVER_ERROR)
+				.body(Body::from(format!("Failed to query playlist details: {}", err)))
+				.unwrap();
+		}
+	};
+
+	// Fetch songs in the playlist
+	let songs_query = playlist_songs::table
 		.filter(playlist_songs::playlist_id.eq(&params.playlist_id))
 		.inner_join(music::table)
 		.select((
@@ -55,15 +77,22 @@ pub async fn get_playlist_music(
 		))
 		.into_boxed();
 
-	match query.load::<PlaylistMusicResponse>(&mut db_conn) {
-		Ok(music_list) => Response::builder()
-			.status(StatusCode::OK)
-			.header(header::CONTENT_TYPE, "application/json")
-			.body(Body::from(serde_json::to_string(&music_list).unwrap()))
-			.unwrap(),
-		Err(err) => Response::builder()
-			.status(StatusCode::INTERNAL_SERVER_ERROR)
-			.body(Body::from(format!("Failed to query playlist music: {}", err)))
-			.unwrap(),
-	}
+	let songs = match songs_query.load::<PlaylistMusicResponse>(&mut db_conn) {
+		Ok(songs) => songs,
+		Err(err) => {
+			return Response::builder()
+				.status(StatusCode::INTERNAL_SERVER_ERROR)
+				.body(Body::from(format!("Failed to query playlist music: {}", err)))
+				.unwrap();
+		}
+	};
+
+	// Construct the final response
+	let response = PlaylistDetailsResponse { playlist, songs };
+
+	Response::builder()
+		.status(StatusCode::OK)
+		.header(header::CONTENT_TYPE, "application/json")
+		.body(Body::from(serde_json::to_string(&response).unwrap()))
+		.unwrap()
 }

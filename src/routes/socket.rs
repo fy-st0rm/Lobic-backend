@@ -16,29 +16,85 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use tokio::sync::broadcast;
 
+
+// Payload definitions for respective endpoints
+
 #[derive(Debug, Serialize, Deserialize)]
 struct SocketPayload {
 	pub op_code: OpCode,
 	pub value: Value,
 }
 
+#[derive(Serialize, Deserialize)]
+struct ConnectPayload {
+	pub user_id: String,
+}
+
+#[derive(Serialize, Deserialize)]
+struct CreateLobbyPayload {
+	pub host_id: String,
+}
+
+#[derive(Serialize, Deserialize)]
+struct JoinLobbyPayload {
+	pub lobby_id: String,
+	pub user_id: String,
+}
+
+#[derive(Serialize, Deserialize)]
+struct LeaveLobbyPayload {
+	pub lobby_id: String,
+	pub user_id: String,
+}
+
+#[derive(Serialize, Deserialize)]
+struct MessagePayload {
+	pub lobby_id: String,
+	pub user_id: String,
+	pub message: String,
+}
+
+#[derive(Serialize, Deserialize)]
+struct GetMessagePayload {
+	pub lobby_id: String,
+}
+
+#[derive(Serialize, Deserialize)]
+struct SetMusicStatePayload {
+	pub lobby_id: String,
+	pub user_id: String,
+	pub music_id: String,
+	pub title: String,
+	pub artist: String,
+	pub cover_img: String,
+	pub timestamp: f64,
+	pub state: MusicState,
+}
+
+#[derive(Serialize, Deserialize)]
+struct SyncMusicPayload {
+	pub lobby_id: String
+}
+
+
+// Endpoint handlers
+
 pub async fn websocket_handler(ws: WebSocketUpgrade, State(app_state): State<AppState>) -> impl IntoResponse {
 	ws.on_upgrade(|socket| handle_socket(socket, State(app_state)))
 }
 
-fn handle_connect(tx: &broadcast::Sender<Message>, value: &Value, user_pool: &UserPool) {
-	let user_id = match value.get("user_id") {
-		Some(id) => id.as_str().unwrap(),
-		None => {
-			let response = json!({
-				"op_code": OpCode::ERROR,
-				"value": "\"user_id\" field is missing.".to_string()
-			})
-			.to_string();
-			let _ = tx.send(Message::Text(response));
-			return;
-		}
-	};
+fn handle_connect(
+	tx: &broadcast::Sender<Message>,
+	value: Value,
+	db_pool: &DatabasePool,
+	user_pool: &UserPool
+) -> Result<String, String> {
+	let payload: ConnectPayload = serde_json::from_value(value)
+		.map_err(|x| x.to_string())?;
+
+	if !user_exists(&payload.user_id, db_pool) {
+		return Err(format!("Invalid user_id: {}", payload.user_id));
+	}
 
 	let response = json!({
 		"op_code": OpCode::OK,
@@ -46,250 +102,131 @@ fn handle_connect(tx: &broadcast::Sender<Message>, value: &Value, user_pool: &Us
 		"value": "Sucessfully connected to ws."
 	})
 	.to_string();
-	let _ = tx.send(Message::Text(response));
+	user_pool.insert(&payload.user_id, tx);
 
-	user_pool.insert(user_id, tx);
+	Ok(response)
 }
 
 fn handle_create_lobby(
-	tx: &broadcast::Sender<Message>,
-	value: &Value,
+	value: Value,
 	db_pool: &DatabasePool,
 	lobby_pool: &LobbyPool,
 	user_pool: &UserPool,
-) {
-	let host_id = match value.get("host_id") {
-		Some(v) => v.as_str().unwrap(),
-		None => {
-			let response = json!({
-				"op_code": OpCode::ERROR,
-				"value": "\"host_id\" field is missing.".to_string()
-			})
-			.to_string();
-			let _ = tx.send(Message::Text(response));
-			return;
-		}
-	};
+) -> Result<String, String> {
+	let payload: CreateLobbyPayload = serde_json::from_value(value)
+		.map_err(|x| x.to_string())?;
 
-	let res = lobby_pool.create_lobby(host_id, db_pool);
-	match res {
-		Ok(ok) => {
-			let response = json!({
-				"op_code": OpCode::OK,
-				"for": OpCode::CREATE_LOBBY,
-				"value": ok
-			})
-			.to_string();
-			let _ = tx.send(Message::Text(response));
-		}
-		Err(err) => {
-			let response = json!({
-				"op_code": OpCode::ERROR,
-				"value": err
-			})
-			.to_string();
-			let _ = tx.send(Message::Text(response));
-		}
-	};
+	let res = lobby_pool.create_lobby(&payload.host_id, db_pool)?;
+	let response = json!({
+		"op_code": OpCode::OK,
+		"for": OpCode::CREATE_LOBBY,
+		"value": res
+	})
+	.to_string();
 
 	// TODO: Broadcast to friends only
 	// Broadcasting to every clients
 	let conns = user_pool.get_conns();
 	for conn in conns {
-		handle_get_lobby_ids(&conn, lobby_pool);
+		let ids = lobby_pool.get_ids();
+		let response = json!({
+			"op_code": OpCode::OK,
+			"for": OpCode::GET_LOBBY_IDS,
+			"value": ids
+		})
+		.to_string();
+		let _ = conn.send(Message::Text(response));
 	}
+
+	Ok(response)
 }
 
-fn handle_join_lobby(tx: &broadcast::Sender<Message>, value: &Value, db_pool: &DatabasePool, lobby_pool: &LobbyPool) {
-	let lobby_id = match value.get("lobby_id") {
-		Some(v) => v.as_str().unwrap(),
-		None => {
-			let response = json!({
-				"op_code": OpCode::ERROR,
-				"value": "\"lobby_id\" field is missing.".to_string()
-			})
-			.to_string();
-			let _ = tx.send(Message::Text(response));
-			return;
-		}
-	};
+fn handle_join_lobby(
+	value: Value,
+	db_pool: &DatabasePool,
+	lobby_pool: &LobbyPool
+) -> Result<String, String> {
+	let payload: JoinLobbyPayload = serde_json::from_value(value)
+		.map_err(|x| x.to_string())?;
 
-	let user_id = match value.get("user_id") {
-		Some(v) => v.as_str().unwrap(),
-		None => {
-			let response = json!({
-				"op_code": OpCode::ERROR,
-				"value": "\"user_id\" field is missing.".to_string()
-			})
-			.to_string();
-			let _ = tx.send(Message::Text(response));
-			return;
-		}
-	};
+	let res = lobby_pool.join_lobby(&payload.lobby_id, &payload.user_id, db_pool)?;
+	let response = json!({
+		"op_code": OpCode::OK,
+		"for": OpCode::JOIN_LOBBY,
+		"value": res
+	})
+	.to_string();
 
-	let res = lobby_pool.join_lobby(lobby_id, user_id, db_pool);
-	match res {
-		Ok(ok) => {
-			let response = json!({
-				"op_code": OpCode::OK,
-				"for": OpCode::JOIN_LOBBY,
-				"value": ok
-			})
-			.to_string();
-			let _ = tx.send(Message::Text(response));
-		}
-		Err(err) => {
-			let response = json!({
-				"op_code": OpCode::ERROR,
-				"value": err
-			})
-			.to_string();
-			let _ = tx.send(Message::Text(response));
-		}
-	};
+	Ok(response)
 }
 
 fn handle_leave_lobby(
-	tx: &broadcast::Sender<Message>,
-	value: &Value,
+	value: Value,
 	db_pool: &DatabasePool,
 	lobby_pool: &LobbyPool,
 	user_pool: &UserPool,
-) {
-	let lobby_id = match value.get("lobby_id") {
-		Some(v) => v.as_str().unwrap(),
-		None => {
-			let response = json!({
-				"op_code": OpCode::ERROR,
-				"value": "\"lobby_id\" field is missing.".to_string()
-			})
-			.to_string();
-			let _ = tx.send(Message::Text(response));
-			return;
-		}
-	};
+) -> Result<String, String> {
+	let payload: LeaveLobbyPayload = serde_json::from_value(value)
+		.map_err(|x| x.to_string())?;
 
-	let user_id = match value.get("user_id") {
-		Some(v) => v.as_str().unwrap(),
-		None => {
-			let response = json!({
-				"op_code": OpCode::ERROR,
-				"value": "\"user_id\" field is missing.".to_string()
-			})
-			.to_string();
-			let _ = tx.send(Message::Text(response));
-			return;
-		}
-	};
-
-	let lobby = match lobby_pool.get(lobby_id) {
+	let lobby = match lobby_pool.get(&payload.lobby_id) {
 		Some(lobby) => lobby,
-		None => {
-			let response = json!({
-				"op_code": OpCode::ERROR,
-				"value": format!("Invalid lobby id: {}", lobby_id)
-			})
-			.to_string();
-			let _ = tx.send(Message::Text(response));
-			return;
-		}
+		None => return Err(format!("Invalid lobby id: {}", payload.lobby_id))
 	};
 
+	// If the user is host of the lobby, the lobby gets deleted when host leaves.
 	let res: Result<String, String>;
-	if lobby.host_id == user_id {
-		res = lobby_pool.delete_lobby(lobby_id, user_pool);
+	if lobby.host_id == payload.user_id {
+		res = lobby_pool.delete_lobby(&payload.lobby_id, user_pool);
 
+		// TODO: Broadcast to friends only
+		// Broadcasting to all the users
 		let conns = user_pool.get_conns();
 		for conn in conns {
-			handle_get_lobby_ids(&conn, lobby_pool);
-		}
-	} else {
-		res = lobby_pool.leave_lobby(lobby_id, user_id, db_pool);
-	}
-
-	match res {
-		Ok(ok) => {
+			let ids = lobby_pool.get_ids();
 			let response = json!({
 				"op_code": OpCode::OK,
-				"for": OpCode::LEAVE_LOBBY,
-				"value": ok
+				"for": OpCode::GET_LOBBY_IDS,
+				"value": ids
 			})
 			.to_string();
-			let _ = tx.send(Message::Text(response));
+			let _ = conn.send(Message::Text(response));
 		}
-		Err(err) => {
-			let response = json!({
-				"op_code": OpCode::ERROR,
-				"value": err
-			})
-			.to_string();
-			let _ = tx.send(Message::Text(response));
-		}
-	};
+	} else {
+		res = lobby_pool.leave_lobby(&payload.lobby_id, &payload.user_id, db_pool);
+	}
+
+	let ok = res?;
+	let response = json!({
+		"op_code": OpCode::OK,
+		"for": OpCode::LEAVE_LOBBY,
+		"value": ok
+	})
+	.to_string();
+
+	Ok(response)
 }
 
 fn handle_message(
-	tx: &broadcast::Sender<Message>,
-	value: &Value,
+	value: Value,
 	db_pool: &DatabasePool,
 	lobby_pool: &LobbyPool,
 	user_pool: &UserPool,
-) {
-	let lobby_id = match value.get("lobby_id") {
-		Some(v) => v.as_str().unwrap(),
-		None => {
-			let response = json!({
-				"op_code": OpCode::ERROR,
-				"value": "\"lobby_id\" field is missing.".to_string()
-			})
-			.to_string();
-			let _ = tx.send(Message::Text(response));
-			return;
-		}
-	};
+) -> Result<String, String> {
+	let payload: MessagePayload = serde_json::from_value(value)
+		.map_err(|x| x.to_string())?;
 
-	let user_id = match value.get("user_id") {
-		Some(v) => v.as_str().unwrap(),
-		None => {
-			let response = json!({
-				"op_code": OpCode::ERROR,
-				"value": "\"user_id\" field is missing.".to_string()
-			})
-			.to_string();
-			let _ = tx.send(Message::Text(response));
-			return;
-		}
-	};
+	lobby_pool.append_message(
+		&payload.lobby_id,
+		&payload.user_id,
+		&payload.message,
+		db_pool
+	)?;
 
-	let message = match value.get("message") {
-		Some(v) => v.as_str().unwrap(),
-		None => {
-			let response = json!({
-				"op_code": OpCode::ERROR,
-				"value": "\"message\" field is missing.".to_string()
-			})
-			.to_string();
-			let _ = tx.send(Message::Text(response));
-			return;
-		}
-	};
-
-	match lobby_pool.append_message(lobby_id, user_id, message, db_pool) {
-		Ok(_) => (),
-		Err(e) => {
-			let response = json!({
-				"op_code": OpCode::ERROR,
-				"value": e,
-			})
-			.to_string();
-			let _ = tx.send(Message::Text(response));
-			return;
-		}
-	};
-
-	let lobby = lobby_pool.get(lobby_id).unwrap();
+	let lobby = lobby_pool.get(&payload.lobby_id).unwrap(); // unwrapped cuz we're sure the lobby exists cuz of above function call. i hope..
 	let msgs = lobby.chat;
 
+	// Broadcasting the message to everyone in the lobby
 	for client_id in lobby.clients {
 		let response = json!({
 			"op_code": OpCode::OK,
@@ -301,43 +238,37 @@ fn handle_message(
 		let client_conn = match user_pool.get(&client_id) {
 			Some(conn) => conn,
 			None => {
-				let response = json!({
-					"op_code": OpCode::ERROR,
-					"value": format!("Cannot find user {} in a lobby {} (in \"handle_message\" this shouldnt occure)", client_id, lobby_id)
-				}).to_string();
-				let _ = tx.send(Message::Text(response));
-				return;
+				return Err(
+					format!(
+						"Cannot find user {} in a lobby {} (in \"handle_message\" this shouldnt occure)",
+						client_id,
+						payload.lobby_id
+					)
+				);
 			}
 		};
 		let _ = client_conn.send(Message::Text(response));
 	}
+
+	let response = json!({
+		"op_code": OpCode::OK,
+		"for": OpCode::MESSAGE,
+		"value": "Sucessfully sent message"
+	}).to_string();
+
+	Ok(response)
 }
 
-fn handle_get_messages(tx: &broadcast::Sender<Message>, value: &Value, lobby_pool: &LobbyPool) {
-	let lobby_id = match value.get("lobby_id") {
-		Some(v) => v.as_str().unwrap(),
-		None => {
-			let response = json!({
-				"op_code": OpCode::ERROR,
-				"value": "\"lobby_id\" field is missing.".to_string()
-			})
-			.to_string();
-			let _ = tx.send(Message::Text(response));
-			return;
-		}
-	};
+fn handle_get_messages(
+	value: Value,
+	lobby_pool: &LobbyPool
+) -> Result<String, String> {
+	let payload: GetMessagePayload = serde_json::from_value(value)
+		.map_err(|x| x.to_string())?;
 
-	let msgs = match lobby_pool.get_msgs(lobby_id) {
+	let msgs = match lobby_pool.get_msgs(&payload.lobby_id) {
 		Some(msgs) => msgs,
-		None => {
-			let response = json!({
-				"op_code": OpCode::ERROR,
-				"value": format!("Invalid lobby id: {}", lobby_id),
-			})
-			.to_string();
-			let _ = tx.send(Message::Text(response));
-			return;
-		}
+		None => return Err(format!("Invalid lobby id: {}", payload.lobby_id))
 	};
 
 	let response = json!({
@@ -346,10 +277,11 @@ fn handle_get_messages(tx: &broadcast::Sender<Message>, value: &Value, lobby_poo
 		"value": msgs
 	})
 	.to_string();
-	let _ = tx.send(Message::Text(response));
+
+	Ok(response)
 }
 
-fn handle_get_lobby_ids(tx: &broadcast::Sender<Message>, lobby_pool: &LobbyPool) {
+fn handle_get_lobby_ids(lobby_pool: &LobbyPool) -> Result<String, String> {
 	let ids = lobby_pool.get_ids();
 	let response = json!({
 		"op_code": OpCode::OK,
@@ -357,148 +289,35 @@ fn handle_get_lobby_ids(tx: &broadcast::Sender<Message>, lobby_pool: &LobbyPool)
 		"value": ids
 	})
 	.to_string();
-	let _ = tx.send(Message::Text(response));
+	Ok(response)
 }
 
 fn handle_set_music_state(
-	tx: &broadcast::Sender<Message>,
-	value: &Value,
+	value: Value,
 	lobby_pool: &LobbyPool,
 	user_pool: &UserPool,
-) {
-	let lobby_id = match value.get("lobby_id") {
-		Some(v) => v.as_str().unwrap(),
-		None => {
-			let response = json!({
-				"op_code": OpCode::ERROR,
-				"value": "\"lobby_id\" field is missing.".to_string()
-			})
-			.to_string();
-			let _ = tx.send(Message::Text(response));
-			return;
-		}
-	};
-
-	let user_id = match value.get("user_id") {
-		Some(v) => v.as_str().unwrap(),
-		None => {
-			let response = json!({
-				"op_code": OpCode::ERROR,
-				"value": "\"user_id\" field is missing.".to_string()
-			})
-			.to_string();
-			let _ = tx.send(Message::Text(response));
-			return;
-		}
-	};
-
-	let music_id = match value.get("music_id") {
-		Some(v) => v.as_str().unwrap(),
-		None => {
-			let response = json!({
-				"op_code": OpCode::ERROR,
-				"value": "\"music_id\" field is missing.".to_string()
-			})
-			.to_string();
-			let _ = tx.send(Message::Text(response));
-			return;
-		}
-	};
-
-	let title = match value.get("title") {
-		Some(v) => v.as_str().unwrap(),
-		None => {
-			let response = json!({
-				"op_code": OpCode::ERROR,
-				"value": "\"title\" field is missing.".to_string()
-			})
-			.to_string();
-			let _ = tx.send(Message::Text(response));
-			return;
-		}
-	};
-
-	let artist = match value.get("artist") {
-		Some(v) => v.as_str().unwrap(),
-		None => {
-			let response = json!({
-				"op_code": OpCode::ERROR,
-				"value": "\"artist\" field is missing.".to_string()
-			})
-			.to_string();
-			let _ = tx.send(Message::Text(response));
-			return;
-		}
-	};
-
-	let cover_img = match value.get("cover_img") {
-		Some(v) => v.as_str().unwrap(),
-		None => {
-			let response = json!({
-				"op_code": OpCode::ERROR,
-				"value": "\"cover_img\" field is missing.".to_string()
-			})
-			.to_string();
-			let _ = tx.send(Message::Text(response));
-			return;
-		}
-	};
-
-	let timestamp: f64 = match value.get("timestamp") {
-		Some(v) => v.as_f64().unwrap(),
-		None => {
-			let response = json!({
-				"op_code": OpCode::ERROR,
-				"value": "\"timestamp\" field is missing.".to_string()
-			})
-			.to_string();
-			let _ = tx.send(Message::Text(response));
-			return;
-		}
-	};
-
-	let state: MusicState = match value.get("state") {
-		Some(v) => serde_json::from_value::<MusicState>(v.clone()).unwrap(),
-		None => {
-			let response = json!({
-				"op_code": OpCode::ERROR,
-				"value": "\"state\" field is missing.".to_string()
-			})
-			.to_string();
-			let _ = tx.send(Message::Text(response));
-			return;
-		}
-	};
+) -> Result<String, String> {
+	let payload: SetMusicStatePayload = serde_json::from_value(value)
+		.map_err(|x| x.to_string())?;
 
 	let music = Music {
-		id: music_id.to_string(),
-		title: title.to_string(),
-		artist: artist.to_string(),
-		cover_img: cover_img.to_string(),
-		timestamp: timestamp,
-		state: state,
+		id: payload.music_id,
+		title: payload.title,
+		artist: payload.artist,
+		cover_img: payload.cover_img,
+		timestamp: payload.timestamp,
+		state: payload.state,
 	};
 
-	match lobby_pool.set_music_state(lobby_id, user_id, music) {
-		Ok(_) => (),
-		Err(err) => {
-			let response = json!({
-				"op_code": OpCode::ERROR,
-				"value": err
-			})
-			.to_string();
-			let _ = tx.send(Message::Text(response));
-			return;
-		}
-	};
+	lobby_pool.set_music_state(&payload.lobby_id, &payload.user_id, music)?;
 
 	// NOTE: We donot notify the host if we sucessfully set the state or not
-	let lobby = lobby_pool.get(lobby_id).unwrap();
+	let lobby = lobby_pool.get(&payload.lobby_id).unwrap();
 	let music = lobby.music;
 
 	// Sending the sync request to every client in lobby
 	for client_id in lobby.clients {
-		if client_id == user_id {
+		if client_id == payload.user_id {
 			continue;
 		}
 
@@ -512,43 +331,37 @@ fn handle_set_music_state(
 		let client_conn = match user_pool.get(&client_id) {
 			Some(conn) => conn,
 			None => {
-				let response = json!({
-					"op_code": OpCode::ERROR,
-					"value": format!("Cannot find user {} in a lobby {} (in \"handle_message\" this shouldnt occure)", client_id, lobby_id)
-				}).to_string();
-				let _ = tx.send(Message::Text(response));
-				return;
+				return Err(
+					format!(
+						"Cannot find user {} in a lobby {} (in \"handle_set_music_state\" this shouldnt occure)",
+						client_id,
+						payload.lobby_id
+					)
+				);
 			}
 		};
 		let _ = client_conn.send(Message::Text(response));
 	}
+
+	let response = json!({
+		"op_code": OpCode::OK,
+		"for": OpCode::SET_MUSIC_STATE,
+		"value": "Sucessfully set music state"
+	}).to_string();
+
+	Ok(response)
 }
 
-fn handle_sync_music(tx: &broadcast::Sender<Message>, value: &Value, lobby_pool: &LobbyPool) {
-	let lobby_id = match value.get("lobby_id") {
-		Some(v) => v.as_str().unwrap(),
-		None => {
-			let response = json!({
-				"op_code": OpCode::ERROR,
-				"value": "\"lobby_id\" field is missing.".to_string()
-			})
-			.to_string();
-			let _ = tx.send(Message::Text(response));
-			return;
-		}
-	};
+fn handle_sync_music(
+	value: Value,
+	lobby_pool: &LobbyPool
+) -> Result<String, String> {
+	let payload: SyncMusicPayload = serde_json::from_value(value)
+		.map_err(|x| x.to_string())?;
 
-	let lobby = match lobby_pool.get(lobby_id) {
+	let lobby = match lobby_pool.get(&payload.lobby_id) {
 		Some(lobby) => lobby,
-		None => {
-			let response = json!({
-				"op_code": OpCode::ERROR,
-				"value": format!("Invalid lobby id: {}", lobby_id)
-			})
-			.to_string();
-			let _ = tx.send(Message::Text(response));
-			return;
-		}
+		None => return Err(format!("Invalid lobby id: {}", payload.lobby_id))
 	};
 
 	let music = lobby.music;
@@ -557,7 +370,8 @@ fn handle_sync_music(tx: &broadcast::Sender<Message>, value: &Value, lobby_pool:
 		"value": music
 	})
 	.to_string();
-	let _ = tx.send(Message::Text(response));
+
+	Ok(response)
 }
 
 pub async fn handle_socket(socket: WebSocket, State(app_state): State<AppState>) {
@@ -572,6 +386,7 @@ pub async fn handle_socket(socket: WebSocket, State(app_state): State<AppState>)
 	tokio::spawn(async move {
 		while let Some(Ok(message)) = receiver.next().await {
 			if let Message::Text(text) = message {
+				// Extracting payload
 				let payload: SocketPayload = match serde_json::from_str(&text) {
 					Ok(value) => value,
 					Err(err) => {
@@ -585,18 +400,33 @@ pub async fn handle_socket(socket: WebSocket, State(app_state): State<AppState>)
 					}
 				};
 
-				match payload.op_code {
-					OpCode::CONNECT => handle_connect(&tx, &payload.value, &user_pool),
-					OpCode::CREATE_LOBBY => handle_create_lobby(&tx, &payload.value, &db_pool, &lobby_pool, &user_pool),
-					OpCode::JOIN_LOBBY => handle_join_lobby(&tx, &payload.value, &db_pool, &lobby_pool),
-					OpCode::LEAVE_LOBBY => handle_leave_lobby(&tx, &payload.value, &db_pool, &lobby_pool, &user_pool),
-					OpCode::MESSAGE => handle_message(&tx, &payload.value, &db_pool, &lobby_pool, &user_pool),
-					OpCode::GET_MESSAGES => handle_get_messages(&tx, &payload.value, &lobby_pool),
-					OpCode::GET_LOBBY_IDS => handle_get_lobby_ids(&tx, &lobby_pool),
-					OpCode::SET_MUSIC_STATE => handle_set_music_state(&tx, &payload.value, &lobby_pool, &user_pool),
-					OpCode::SYNC_MUSIC => handle_sync_music(&tx, &payload.value, &lobby_pool),
-					_ => (),
+				// Operating according to the opcode
+				let response = match payload.op_code {
+					OpCode::CONNECT => handle_connect(&tx, payload.value, &db_pool, &user_pool),
+					OpCode::CREATE_LOBBY => handle_create_lobby(payload.value, &db_pool, &lobby_pool, &user_pool),
+					OpCode::JOIN_LOBBY => handle_join_lobby(payload.value, &db_pool, &lobby_pool),
+					OpCode::LEAVE_LOBBY => handle_leave_lobby(payload.value, &db_pool, &lobby_pool, &user_pool),
+					OpCode::MESSAGE => handle_message(payload.value, &db_pool, &lobby_pool, &user_pool),
+					OpCode::GET_MESSAGES => handle_get_messages(payload.value, &lobby_pool),
+					OpCode::GET_LOBBY_IDS => handle_get_lobby_ids(&lobby_pool),
+					OpCode::SET_MUSIC_STATE => handle_set_music_state(payload.value, &lobby_pool, &user_pool),
+					OpCode::SYNC_MUSIC => handle_sync_music(payload.value, &lobby_pool),
+					_ => Err(format!("Invalid opcode: {:?}", payload.op_code)),
 				};
+
+				// Returning response to the client
+				match response {
+					Ok(ok) => {
+						let _ = tx.send(Message::Text(ok));
+					},
+					Err(err) => {
+						let msg = json!({
+							"op_code": OpCode::ERROR,
+							"value": err
+						}).to_string();
+						let _ = tx.send(Message::Text(msg));
+					}
+				}
 			}
 		}
 	});

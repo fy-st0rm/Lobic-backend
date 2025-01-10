@@ -12,6 +12,7 @@ pub mod playlist {
 }
 pub mod users {
 	pub mod get_user;
+	pub mod get_user_pfp;
 	pub mod update_pfp;
 }
 pub mod auth {

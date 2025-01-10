@@ -2,6 +2,7 @@ pub mod music {
 	pub mod get_music;
 	pub mod save_music;
 	pub mod search_music;
+	pub mod send_music;
 }
 pub mod playlist {
 	pub mod add_song_to_playlist;

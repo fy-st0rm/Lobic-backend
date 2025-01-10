@@ -3,9 +3,10 @@ use crate::{
 	routes::{
 		auth::{login::login, signup::signup, verify::verify},
 		music::{
-			get_music::{get_cover_image, get_music, send_music},
+			get_music::{get_cover_image, get_music},
 			save_music::save_music,
 			search_music::search_music,
+			send_music::send_music,
 		},
 		playlist::{
 			add_song_to_playlist::add_song_to_playlist, create_new_playlist::create_playlist,

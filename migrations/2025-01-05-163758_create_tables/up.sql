@@ -8,7 +8,8 @@ CREATE TABLE users (
 
 CREATE TABLE user_friendship (
 	user_id TEXT NOT NULL REFERENCES users(user_id),
-	friend_id TEXT NOT NULL REFERENCES users(user_id)
+	friend_id TEXT NOT NULL REFERENCES users(user_id),
+	PRIMARY KEY (user_id, friend_id)
 );
 
 -- Music

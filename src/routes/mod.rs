@@ -13,6 +13,8 @@ pub mod playlist {
 pub mod users {
 	pub mod get_user;
 	pub mod update_pfp;
+	pub mod add_friend;
+	pub mod remove_friend;
 }
 pub mod auth {
 	pub mod login;

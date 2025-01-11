@@ -1,5 +1,5 @@
 // models.rs
-use crate::schema::{music, playlist_shares, playlist_songs, playlists, users};
+use crate::schema::*;
 use diesel::{prelude::Insertable, Queryable, Selectable};
 use serde::{Deserialize, Serialize};
 
@@ -10,6 +10,13 @@ pub struct User {
 	pub username: String,
 	pub email: String,
 	pub pwd_hash: String,
+}
+
+#[derive(Insertable, Queryable, Debug)]
+#[diesel(table_name = user_friendship)]
+pub struct UserFriendship {
+	pub user_id: String,
+	pub friend_id: String,
 }
 
 #[derive(Insertable, Queryable, Debug, Selectable, Serialize, Deserialize)]

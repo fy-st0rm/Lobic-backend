@@ -1,4 +1,5 @@
 pub mod music {
+	pub mod get_cover_image;
 	pub mod get_music;
 	pub mod save_music;
 	pub mod search_music;

@@ -3,9 +3,7 @@ use crate::{
 	routes::{
 		auth::{login::login, logout::logout, signup::signup, verify::verify},
 		music::{
-			get_music::{get_cover_image, get_music},
-			save_music::save_music,
-			search_music::search_music,
+			get_cover_image::get_cover_image, get_music::get_music, save_music::save_music, search_music::search_music,
 			send_music::send_music,
 		},
 		playlist::{

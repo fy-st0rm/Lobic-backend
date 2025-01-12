@@ -1,17 +1,13 @@
-use crate::core::app_state::AppState;
-use crate::lobic_db::models::Music;
-
 use axum::{
-	body::Body,
-	extract::{Path, Query, State},
+	extract::{Query, State},
 	http::{header, StatusCode},
-	response::{IntoResponse, Response},
+	response::Response,
 };
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::path::PathBuf;
-use tokio::{fs::File, io::AsyncReadExt};
+
+use crate::{core::app_state::AppState, lobic_db::models::Music};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct MusicResponse {
@@ -29,6 +25,7 @@ pub struct MusicResponse {
 pub struct MusicQuery {
 	title: Option<String>,
 	uuid: Option<String>,
+	trending: Option<bool>, // New query parameter to fetch trending music
 }
 
 pub async fn get_music(State(app_state): State<AppState>, Query(params): Query<MusicQuery>) -> Response<String> {
@@ -47,22 +44,28 @@ pub async fn get_music(State(app_state): State<AppState>, Query(params): Query<M
 
 	let mut query = music.into_boxed();
 
-	// Build query based on provided parameters
-	match (params.title, params.uuid) {
-		(Some(title_val), None) => {
-			query = query.filter(title.eq(title_val));
-		}
-		(None, Some(uuid_val)) => {
-			query = query.filter(music_id.eq(uuid_val));
-		}
-		(None, None) => {
-			// No parameters - return all music
-		}
-		(Some(_), Some(_)) => {
-			return Response::builder()
-				.status(StatusCode::BAD_REQUEST)
-				.body("Please provide either title or uuid, not both".to_string())
-				.unwrap();
+	// Check if the `trending` parameter is set to true
+	if params.trending.unwrap_or(false) {
+		// Fetch top 30 most played songs
+		query = query.order(times_played.desc()).limit(30);
+	} else {
+		// Build query based on provided parameters
+		match (params.title, params.uuid) {
+			(Some(title_val), None) => {
+				query = query.filter(title.eq(title_val));
+			}
+			(None, Some(uuid_val)) => {
+				query = query.filter(music_id.eq(uuid_val));
+			}
+			(None, None) => {
+				// No parameters - return all music
+			}
+			(Some(_), Some(_)) => {
+				return Response::builder()
+					.status(StatusCode::BAD_REQUEST)
+					.body("Please provide either title or uuid, not both".to_string())
+					.unwrap();
+			}
 		}
 	}
 
@@ -85,7 +88,7 @@ pub async fn get_music(State(app_state): State<AppState>, Query(params): Query<M
 
 					MusicResponse {
 						id: entry.music_id.clone(),
-						filename: { format!("./storage/music_db/{}.mp3", entry.music_id) },
+						filename: format!("./storage/music_db/{}.mp3", entry.music_id),
 						artist: entry.artist,
 						title: entry.title,
 						album: entry.album,
@@ -113,40 +116,4 @@ pub async fn get_music(State(app_state): State<AppState>, Query(params): Query<M
 			.body(format!("Database error: {err}"))
 			.unwrap(),
 	}
-}
-
-pub async fn get_cover_image(Path(filename): Path<String>) -> impl IntoResponse {
-	// Construct the path to the cover image
-	let mut path = PathBuf::from("storage/cover_images");
-	path.push(&filename);
-
-	// Open the file
-	let mut file = match File::open(&path).await {
-		Ok(file) => file,
-		Err(_) => {
-			return (StatusCode::NOT_FOUND, "Image not found").into_response();
-		}
-	};
-
-	// Read the file into a byte vector
-	let mut file_bytes = Vec::new();
-	if let Err(_) = file.read_to_end(&mut file_bytes).await {
-		return (StatusCode::INTERNAL_SERVER_ERROR, "Failed to read image file").into_response();
-	}
-
-	// Determine the MIME type based on the file extension
-	let mime_type = match path.extension().and_then(|ext| ext.to_str()) {
-		Some("jpg") | Some("jpeg") => "image/jpeg",
-		Some("png") => "image/png",
-		Some("gif") => "image/gif",
-		Some("webp") => "image/webp",
-		_ => "application/octet-stream", // Fallback MIME type
-	};
-
-	// Serve the file as a response using Body
-	Response::builder()
-		.status(StatusCode::OK)
-		.header(header::CONTENT_TYPE, mime_type)
-		.body(Body::from(file_bytes)) // Use Body::from to create the response body
-		.unwrap()
 }

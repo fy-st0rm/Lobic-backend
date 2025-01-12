@@ -39,4 +39,12 @@ impl UserPool {
 		let mut inner = self.inner.lock().unwrap();
 		inner.insert(id.to_string(), sender.clone());
 	}
+
+	pub fn remove(&self, id: &str) -> bool {
+		let mut inner = self.inner.lock().unwrap();
+		match inner.remove(id) {
+			Some(_) => true,
+			None => false,
+		}
+	}
 }

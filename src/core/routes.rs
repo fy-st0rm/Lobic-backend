@@ -1,7 +1,7 @@
 use crate::{
 	core::app_state::AppState,
 	routes::{
-		auth::{login::login, signup::signup, verify::verify},
+		auth::{login::login, signup::signup, verify::verify, logout::logout},
 		music::{
 			get_music::{get_cover_image, get_music},
 			save_music::save_music,
@@ -27,6 +27,7 @@ pub fn configure_routes(app_state: AppState) -> Router {
 		.route("/get_user", get(get_user))
 		.route("/signup", post(signup))
 		.route("/login", post(login))
+		.route("/logout", post(logout))
 		.route("/verify", get(verify))
 		.route("/music/:music_id", get(send_music))
 		.route("/image/:filename", get(get_cover_image))

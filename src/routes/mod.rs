@@ -19,6 +19,7 @@ pub mod users {
 }
 pub mod auth {
 	pub mod login;
+	pub mod logout;
 	pub mod signup;
 	pub mod verify;
 }

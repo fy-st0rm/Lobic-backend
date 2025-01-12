@@ -135,6 +135,7 @@ fn process_music_file(path: &Path, db_conn: &mut SqliteConnection) -> Result<(),
 		title: curr_title.to_string(),
 		album: curr_album.to_string(),
 		genre: tag.genre().unwrap_or("Unknown Genre").to_string(),
+		times_played: 0,
 	};
 
 	extract_cover_art(path_str, &curr_music_id)?;

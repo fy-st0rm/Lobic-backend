@@ -1,18 +1,18 @@
-use crate::core::app_state::AppState;
-use crate::lobic_db::models::UserFriendship;
-use crate::lobic_db::db::*;
-use crate::schema::user_friendship::dsl::*;
 use crate::config::OpCode;
+use crate::core::app_state::AppState;
+use crate::lobic_db::db::*;
+use crate::lobic_db::models::UserFriendship;
+use crate::schema::user_friendship::dsl::*;
 
-use diesel::prelude::*;
-use serde::{Deserialize, Serialize};
-use serde_json::json;
 use axum::{
-	extract::{State, ws::Message},
+	extract::{ws::Message, State},
 	http::status::StatusCode,
 	response::Response,
 	Json,
 };
+use diesel::prelude::*;
+use serde::{Deserialize, Serialize};
+use serde_json::json;
 
 #[derive(Serialize, Deserialize)]
 pub struct AddFriendPayload {
@@ -20,24 +20,15 @@ pub struct AddFriendPayload {
 	pub friend_id: String,
 }
 
-pub async fn add_friend(
-	State(app_state): State<AppState>,
-	Json(payload): Json<AddFriendPayload>
-) -> Response<String> {
+pub async fn add_friend(State(app_state): State<AppState>, Json(payload): Json<AddFriendPayload>) -> Response<String> {
 	if !user_exists(&payload.user_id, &app_state.db_pool) {
 		let msg = format!("Invalid user_id: {}", payload.user_id);
-		return Response::builder()
-			.status(StatusCode::BAD_REQUEST)
-			.body(msg)
-			.unwrap();
+		return Response::builder().status(StatusCode::BAD_REQUEST).body(msg).unwrap();
 	}
 
 	if !user_exists(&payload.friend_id, &app_state.db_pool) {
 		let msg = format!("Invalid friend_id: {}", payload.friend_id);
-		return Response::builder()
-			.status(StatusCode::BAD_REQUEST)
-			.body(msg)
-			.unwrap();
+		return Response::builder().status(StatusCode::BAD_REQUEST).body(msg).unwrap();
 	}
 
 	let mut db_conn = match app_state.db_pool.get() {
@@ -50,7 +41,7 @@ pub async fn add_friend(
 				.unwrap();
 		}
 	};
-	
+
 	// Querying the friendships
 	let query = user_friendship
 		.filter(user_id.eq(&payload.user_id))
@@ -61,10 +52,7 @@ pub async fn add_friend(
 		Err(_) => {
 			return Response::builder()
 				.status(StatusCode::BAD_REQUEST)
-				.body(format!(
-					"Something went wrong ({}: {})",
-					file!(), line!()
-				))
+				.body(format!("Something went wrong ({}: {})", file!(), line!()))
 				.unwrap();
 		}
 	};
@@ -76,10 +64,7 @@ pub async fn add_friend(
 				"user with id: {} is already a friend of {}",
 				payload.friend_id, payload.user_id
 			);
-			return Response::builder()
-				.status(StatusCode::BAD_REQUEST)
-				.body(msg)
-				.unwrap();
+			return Response::builder().status(StatusCode::BAD_REQUEST).body(msg).unwrap();
 		}
 	}
 
@@ -99,10 +84,7 @@ pub async fn add_friend(
 		Some(conn) => conn,
 		None => {
 			let msg = format!("Looks like user {} hasnt registered to websocket.", payload.friend_id);
-			return Response::builder()
-				.status(StatusCode::BAD_REQUEST)
-				.body(msg)
-				.unwrap();
+			return Response::builder().status(StatusCode::BAD_REQUEST).body(msg).unwrap();
 		}
 	};
 
@@ -110,7 +92,8 @@ pub async fn add_friend(
 		"op_code": OpCode::OK,
 		"for": OpCode::ADD_FRIEND,
 		"value": payload.user_id
-	}).to_string();
+	})
+	.to_string();
 	let _ = conn.send(Message::Text(response));
 
 	// Finish
@@ -119,4 +102,3 @@ pub async fn add_friend(
 		.body("Sucessfully added friend".to_string())
 		.unwrap()
 }
-

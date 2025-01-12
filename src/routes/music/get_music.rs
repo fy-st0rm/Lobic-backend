@@ -4,10 +4,7 @@ use crate::lobic_db::models::Music;
 use axum::{
 	body::Body,
 	extract::{Path, Query, State},
-	http::{
-		header::{self},
-		StatusCode,
-	},
+	http::{header, StatusCode},
 	response::{IntoResponse, Response},
 };
 use diesel::prelude::*;
@@ -24,6 +21,7 @@ pub struct MusicResponse {
 	pub title: String,
 	pub album: String,
 	pub genre: String,
+	pub times_played: i32,
 	pub cover_art_path: Option<String>,
 }
 
@@ -92,6 +90,7 @@ pub async fn get_music(State(app_state): State<AppState>, Query(params): Query<M
 						title: entry.title,
 						album: entry.album,
 						genre: entry.genre,
+						times_played: entry.times_played,
 						cover_art_path: has_cover.then_some(cover_art_path),
 					}
 				})
@@ -109,10 +108,6 @@ pub async fn get_music(State(app_state): State<AppState>, Query(params): Query<M
 					.unwrap(),
 			}
 		}
-		Err(diesel::NotFound) => Response::builder()
-			.status(StatusCode::NOT_FOUND)
-			.body("No music entries found".to_string())
-			.unwrap(),
 		Err(err) => Response::builder()
 			.status(StatusCode::INTERNAL_SERVER_ERROR)
 			.body(format!("Database error: {err}"))

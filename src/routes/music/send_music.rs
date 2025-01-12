@@ -1,21 +1,35 @@
 use axum::{
-	extract::Path,
+	extract::{Path, State},
 	response::{IntoResponse, Response},
 };
+use diesel::{update, ExpressionMethods, QueryDsl, RunQueryDsl};
 use std::path::PathBuf;
 use tokio::{fs::File, io::AsyncReadExt};
 
-pub async fn send_music(Path(music_id): Path<String>, // Extract `path` from the URL path
-) -> impl IntoResponse {
-	// Open the file
+use crate::{core::app_state::AppState, schema::music::dsl::*};
 
+pub async fn send_music(Path(curr_music_id): Path<String>, State(app_state): State<AppState>) -> impl IntoResponse {
+	// Open the file
 	let mut path = PathBuf::from("storage/music_db");
-	path.push(format!("{}.mp3", music_id));
+	path.push(format!("{}.mp3", curr_music_id));
 
 	let mut file = match File::open(&path).await {
 		Ok(file) => file,
 		Err(_) => return (axum::http::StatusCode::NOT_FOUND, "File not found").into_response(),
 	};
+
+	//increment the times_played of the current song
+	let mut db_conn = match app_state.db_pool.get() {
+		Ok(conn) => conn,
+		Err(err) => {
+			let msg = format!("Failed to get DB from pool: {err}");
+			return (axum::http::StatusCode::INTERNAL_SERVER_ERROR, msg).into_response();
+		}
+	};
+	update(music.filter(music_id.eq(&curr_music_id)))
+		.set(times_played.eq(times_played + 1))
+		.execute(&mut db_conn)
+		.unwrap();
 
 	// Read the file into a byte vector
 	let mut file_bytes = Vec::new();

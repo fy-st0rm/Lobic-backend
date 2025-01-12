@@ -2,9 +2,9 @@ use crate::core::app_state::AppState;
 use crate::utils::cookie;
 
 use axum::{
+	extract::State,
 	http::{header, status::StatusCode},
 	response::Response,
-	extract::State,
 	Json,
 };
 use serde::{Deserialize, Serialize};
@@ -14,10 +14,7 @@ pub struct LogoutPayload {
 	pub user_id: String,
 }
 
-pub async fn logout(
-	State(app_state): State<AppState>,
-	Json(payload): Json<LogoutPayload>)
--> Response<String> {
+pub async fn logout(State(app_state): State<AppState>, Json(payload): Json<LogoutPayload>) -> Response<String> {
 	let _ = app_state.user_pool.remove(&payload.user_id);
 
 	let user_cookie = cookie::create("user_id", "", 0, false);

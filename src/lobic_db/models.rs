@@ -27,6 +27,7 @@ pub struct Music {
 	pub title: String,
 	pub album: String,
 	pub genre: String,
+	pub times_played: i32,
 }
 
 #[derive(Insertable, Queryable, Debug, Selectable, Serialize, Deserialize)]

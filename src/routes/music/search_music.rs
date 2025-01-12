@@ -18,6 +18,7 @@ pub struct MusicResponse {
 	pub album: String,
 	pub genre: String,
 	pub cover_art_path: Option<String>,
+	pub times_played: i32,
 }
 
 #[derive(Deserialize)]
@@ -120,6 +121,7 @@ pub async fn search_music(State(app_state): State<AppState>, Query(params): Quer
 				album: entry.album,
 				genre: entry.genre,
 				cover_art_path: has_cover.then_some(cover_art_path),
+				times_played: entry.times_played,
 			}
 		})
 		.collect::<Vec<_>>();

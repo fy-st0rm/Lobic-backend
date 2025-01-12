@@ -1,7 +1,7 @@
 use crate::{
 	core::app_state::AppState,
 	routes::{
-		auth::{login::login, signup::signup, verify::verify, logout::logout},
+		auth::{login::login, logout::logout, signup::signup, verify::verify},
 		music::{
 			get_music::{get_cover_image, get_music},
 			save_music::save_music,
@@ -13,7 +13,10 @@ use crate::{
 			get_playlist_music::get_playlist_music, get_users_playlists::get_users_playlists,
 		},
 		socket::websocket_handler,
-		users::{add_friend::add_friend, get_user::get_user, remove_friend::remove_friend, update_pfp::update_pfp},
+		users::{
+			add_friend::add_friend, get_user::get_user, get_user_pfp::get_user_pfp, remove_friend::remove_friend,
+			update_pfp::update_pfp,
+		},
 	},
 };
 use axum::{
@@ -39,6 +42,7 @@ pub fn configure_routes(app_state: AppState) -> Router {
 		.route("/playlist/get_by_uuid", get(get_playlist_music))
 		.route("/playlist/get_users_playlists", get(get_users_playlists))
 		.route("/user/update_pfp", post(update_pfp))
+		.route("/user/get_pfp/:filename", get(get_user_pfp))
 		.route("/add_friend", post(add_friend))
 		.route("/remove_friend", post(remove_friend))
 		.route("/ws", get(websocket_handler))

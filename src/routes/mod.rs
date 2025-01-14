@@ -18,6 +18,7 @@ pub mod users {
 	pub mod get_user_pfp;
 	pub mod remove_friend;
 	pub mod update_pfp;
+	pub mod search_user;
 }
 pub mod auth {
 	pub mod login;

@@ -1,6 +1,7 @@
 use crate::core::app_state::AppState;
 use crate::lobic_db::models::User;
 use crate::schema::users::dsl::*;
+use crate::config::USER_PFP_STORAGE;
 
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -66,7 +67,7 @@ pub async fn search_user(
 	let results: Vec<SearchUserResponse> = matches
 		.into_iter()
 		.map(|entry| {
-			let pfp = format!("./storage/users_pfps/{}.png", entry.user_id);
+			let pfp = format!("{USER_PFP_STORAGE}/{}.png", entry.user_id);
 			let has_pfp = Path::new(&pfp).is_file();
 
 			SearchUserResponse {

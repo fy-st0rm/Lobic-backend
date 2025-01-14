@@ -1,3 +1,5 @@
+use crate::config::COVER_IMG_STORAGE;
+
 use axum::{
 	body::Body,
 	extract::Path,
@@ -9,7 +11,7 @@ use tokio::{fs::File, io::AsyncReadExt};
 
 pub async fn get_cover_image(Path(filename): Path<String>) -> impl IntoResponse {
 	// Construct the path to the cover image
-	let mut path = PathBuf::from("storage/cover_images");
+	let mut path = PathBuf::from(COVER_IMG_STORAGE);
 	path.push(&filename);
 
 	// Open the file

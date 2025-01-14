@@ -1,3 +1,5 @@
+use crate::config::USER_PFP_STORAGE;
+
 use axum::{body::Bytes, extract::Query, http::StatusCode, response::Response};
 use serde::Deserialize;
 use std::fs;
@@ -20,7 +22,7 @@ pub async fn update_pfp(Query(user_uuid): Query<UserUuid>, body: Bytes) -> Respo
 		}
 	};
 
-	let storage_path = Path::new("storage/users_pfps");
+	let storage_path = Path::new(USER_PFP_STORAGE);
 	if let Err(err) = fs::create_dir_all(storage_path) {
 		return Response::builder()
 			.status(StatusCode::INTERNAL_SERVER_ERROR)

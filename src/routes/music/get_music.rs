@@ -7,6 +7,7 @@ use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::fs;
 
+use crate::config::{COVER_IMG_STORAGE, MUSIC_STORAGE};
 use crate::{core::app_state::AppState, lobic_db::models::Music};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -83,12 +84,12 @@ pub async fn get_music(State(app_state): State<AppState>, Query(params): Query<M
 			let responses: Vec<MusicResponse> = music_entries
 				.into_iter()
 				.map(|entry| {
-					let cover_art_path = format!("./storage/cover_images/{}.png", entry.music_id);
+					let cover_art_path = format!("{COVER_IMG_STORAGE}/{}.png", entry.music_id);
 					let has_cover = fs::metadata(&cover_art_path).is_ok();
 
 					MusicResponse {
 						id: entry.music_id.clone(),
-						filename: format!("./storage/music_db/{}.mp3", entry.music_id),
+						filename: format!("{MUSIC_STORAGE}/{}.mp3", entry.music_id),
 						artist: entry.artist,
 						title: entry.title,
 						album: entry.album,

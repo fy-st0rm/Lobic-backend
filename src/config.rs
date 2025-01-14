@@ -3,6 +3,9 @@ use serde::{Deserialize, Serialize};
 
 pub const IP: &str = "127.0.0.1";
 pub const PORT: &str = "8080";
+pub const COVER_IMG_STORAGE: &str = "./storage/cover_images";
+pub const MUSIC_STORAGE: &str = "./storage/music_db";
+pub const USER_PFP_STORAGE: &str = "./storage/users_pfps";
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum OpCode {

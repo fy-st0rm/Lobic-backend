@@ -1,5 +1,6 @@
 use crate::core::app_state::AppState;
 use crate::lobic_db::models::Music;
+use crate::config::COVER_IMG_STORAGE;
 use axum::{
 	extract::{Query, State},
 	http::{header, StatusCode},
@@ -111,7 +112,7 @@ pub async fn search_music(State(app_state): State<AppState>, Query(params): Quer
 		.into_iter()
 		.take(no_results)
 		.map(|(entry, _)| {
-			let cover_art_path = format!("./storage/cover_images/{}.png", entry.music_id);
+			let cover_art_path = format!("{COVER_IMG_STORAGE}/{}.png", entry.music_id);
 			let has_cover = fs::metadata(&cover_art_path).is_ok();
 
 			MusicResponse {

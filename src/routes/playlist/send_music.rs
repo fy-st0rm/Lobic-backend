@@ -1,3 +1,5 @@
+use crate::config::MUSIC_STORAGE;
+
 use axum::{
 	extract::Path,
 	response::{IntoResponse, Response},
@@ -9,7 +11,7 @@ pub async fn send_music(Path(music_id): Path<String>, // Extract `path` from the
 ) -> impl IntoResponse {
 	// Open the file
 
-	let mut path = PathBuf::from("storage/music_db");
+	let mut path = PathBuf::from(MUSIC_STORAGE);
 	path.push(format!("{}.mp3", music_id));
 
 	let mut file = match File::open(&path).await {

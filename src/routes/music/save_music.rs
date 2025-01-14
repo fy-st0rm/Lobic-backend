@@ -1,4 +1,5 @@
 use crate::core::app_state::AppState;
+use crate::config::{COVER_IMG_STORAGE, MUSIC_STORAGE};
 use crate::lobic_db::models::Music;
 use crate::schema::music::dsl::*;
 
@@ -121,7 +122,7 @@ fn process_music_file(path: &Path, db_conn: &mut SqliteConnection) -> Result<(),
 	let curr_music_id = generate_uuid_from_metadata(curr_artist, curr_title, curr_album);
 
 	// Create the music_db directory if it doesn't exist
-	let music_db_dir = PathBuf::from("storage/music_db");
+	let music_db_dir = PathBuf::from(MUSIC_STORAGE);
 	fs::create_dir_all(&music_db_dir)?;
 
 	let new_file_path = music_db_dir.join(format!("{}.mp3", curr_music_id));
@@ -151,7 +152,7 @@ fn extract_cover_art(mp3_path: &str, uuid: &Uuid) -> Result<(), Box<dyn std::err
 
 	if let Some(picture) = pictures.iter().find(|pic| pic.picture_type == PictureType::CoverFront) {
 		// Create platform-independent path for cover_images directory
-		let cover_dir = PathBuf::from("storage/cover_images");
+		let cover_dir = PathBuf::from(COVER_IMG_STORAGE);
 		fs::create_dir_all(&cover_dir)?;
 
 		let output_path = cover_dir.join(format!("{}.png", uuid));

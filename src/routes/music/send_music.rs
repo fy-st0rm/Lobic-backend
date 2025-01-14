@@ -10,6 +10,7 @@ use tokio::{fs::File, io::BufReader};
 use tokio_util::io::ReaderStream;
 
 use crate::core::app_state::AppState;
+use crate::config::MUSIC_STORAGE;
 
 pub async fn send_music(Path(curr_music_id): Path<String>, State(_app_state): State<AppState>) -> impl IntoResponse {
 	// Validate music_id format first
@@ -18,7 +19,7 @@ pub async fn send_music(Path(curr_music_id): Path<String>, State(_app_state): St
 	}
 
 	// Open the file
-	let mut path = PathBuf::from("storage/music_db");
+	let mut path = PathBuf::from(MUSIC_STORAGE);
 	path.push(format!("{}.mp3", curr_music_id));
 
 	let file = match File::open(&path).await {

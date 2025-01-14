@@ -1,4 +1,6 @@
 // get user pfp from inside the /storage/users_pfp/<<uuid.png>> by accepting the user_uuid
+use crate::config::USER_PFP_STORAGE;
+
 use axum::{
 	body::Body,
 	extract::Path,
@@ -13,7 +15,7 @@ use tokio::{fs::File, io::AsyncReadExt};
 
 pub async fn get_user_pfp(Path(filename): Path<String>) -> impl IntoResponse {
 	// Construct the path to the cover image
-	let mut path = PathBuf::from("storage/users_pfps");
+	let mut path = PathBuf::from(USER_PFP_STORAGE);
 	path.push(&filename);
 
 	// Open the file

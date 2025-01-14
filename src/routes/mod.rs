@@ -1,6 +1,7 @@
 pub mod music {
 	pub mod get_cover_image;
 	pub mod get_music;
+	pub mod increment_times_played;
 	pub mod save_music;
 	pub mod search_music;
 	pub mod send_music;

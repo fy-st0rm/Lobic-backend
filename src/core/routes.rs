@@ -3,8 +3,8 @@ use crate::{
 	routes::{
 		auth::{login::login, logout::logout, signup::signup, verify::verify},
 		music::{
-			get_cover_image::get_cover_image, get_music::get_music, save_music::save_music, search_music::search_music,
-			send_music::send_music,
+			get_cover_image::get_cover_image, get_music::get_music, increment_times_played::incr_times_played,
+			save_music::save_music, search_music::search_music, send_music::send_music,
 		},
 		playlist::{
 			add_song_to_playlist::add_song_to_playlist, create_new_playlist::create_playlist,
@@ -39,6 +39,7 @@ pub fn configure_routes(app_state: AppState) -> Router {
 		.route("/playlist/add_song", post(add_song_to_playlist))
 		.route("/playlist/get_by_uuid", get(get_playlist_music))
 		.route("/playlist/get_users_playlists", get(get_users_playlists))
+		.route("/music/incr_times_played/:music_uuid", post(incr_times_played))
 		.route("/user/update_pfp", post(update_pfp))
 		.route("/user/get_pfp/:filename", get(get_user_pfp))
 		.route("/add_friend", post(add_friend))

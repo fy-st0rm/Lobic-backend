@@ -14,6 +14,7 @@ use crate::{
 		users::{
 			add_friend::add_friend, get_user::get_user, get_user_pfp::get_user_pfp, remove_friend::remove_friend,
 			update_pfp::update_pfp,
+			search_user::search_user,
 		},
 	},
 };
@@ -44,6 +45,7 @@ pub fn configure_routes(app_state: AppState) -> Router {
 		.route("/user/get_pfp/:filename", get(get_user_pfp))
 		.route("/add_friend", post(add_friend))
 		.route("/remove_friend", post(remove_friend))
+		.route("/search_user", get(search_user))
 		.route("/ws", get(websocket_handler))
 		.with_state(app_state)
 }

@@ -65,3 +65,10 @@ pub struct PlayLog {
 	pub music_id: String,
 	pub music_played_date_time: String,
 }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct LikedSongs {
+	pub user_id: String,
+	pub music_id: String,
+	pub song_added_date_time: String,
+}

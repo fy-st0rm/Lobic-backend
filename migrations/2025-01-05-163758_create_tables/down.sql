@@ -5,3 +5,4 @@ DROP TABLE music;
 DROP TABLE users;
 DROP TABLE user_friendship;
 DROP TABLE play_log;
+DROP TABLE liked_songs;

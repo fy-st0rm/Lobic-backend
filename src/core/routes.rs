@@ -5,14 +5,15 @@ use crate::{
 		music::{
 			get_cover_image::get_cover_image,
 			get_music::get_music,
+			liked_songs::{
+				add_to_liked_song::add_to_liked_songs, get_liked_songs::get_liked_songs,
+				remove_from_liked_songs::remove_from_liked_songs,
+			},
 			recently_played::{get_recently_played::get_recently_played, log_song_play::log_song_play},
 			save_music::save_music,
 			search_music::search_music,
 			send_music::send_music,
-			trending::{
-				get_trending_songs::{self, get_trending_songs},
-				increment_times_played::incr_times_played,
-			},
+			trending::{get_trending_songs::get_trending_songs, increment_times_played::incr_times_played},
 		},
 		playlist::{
 			add_song_to_playlist::add_song_to_playlist, create_new_playlist::create_playlist,
@@ -42,6 +43,9 @@ pub fn configure_routes(app_state: AppState) -> Router {
 		.route("/image/:filename", get(get_cover_image))
 		.route("/music/log_song_play", post(log_song_play))
 		.route("/music/get_recently_played", get(get_recently_played))
+		.route("/music/liked_song/add", post(add_to_liked_songs))
+		.route("/music/liked_song/remove", post(remove_from_liked_songs))
+		.route("/music/liked_song/get", get(get_liked_songs))
 		.route("/save_music", post(save_music))
 		.route("/get_music", get(get_music))
 		.route("/music/get_trending", get(get_trending_songs))

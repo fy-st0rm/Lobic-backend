@@ -57,3 +57,11 @@ pub struct PlaylistShare {
 	pub shared_to_user_id: String,
 	pub share_permission: String,
 }
+
+#[derive(Insertable, Queryable, Debug)]
+#[diesel(table_name = play_log)]
+pub struct PlayLog {
+	pub user_id: String,
+	pub music_id: String,
+	pub music_played_date_time: String,
+}

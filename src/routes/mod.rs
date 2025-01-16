@@ -1,10 +1,17 @@
 pub mod music {
 	pub mod get_cover_image;
 	pub mod get_music;
-	pub mod increment_times_played;
 	pub mod save_music;
 	pub mod search_music;
 	pub mod send_music;
+	pub mod recently_played {
+		pub mod get_recently_played;
+		pub mod log_song_play;
+	}
+	pub mod trending {
+		pub mod get_trending_songs;
+		pub mod increment_times_played;
+	}
 }
 pub mod playlist {
 	pub mod add_song_to_playlist;
@@ -17,9 +24,10 @@ pub mod users {
 	pub mod get_user;
 	pub mod get_user_pfp;
 	pub mod remove_friend;
-	pub mod update_pfp;
 	pub mod search_user;
+	pub mod update_pfp;
 }
+
 pub mod auth {
 	pub mod login;
 	pub mod logout;

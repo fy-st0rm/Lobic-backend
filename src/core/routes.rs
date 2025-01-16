@@ -3,8 +3,16 @@ use crate::{
 	routes::{
 		auth::{login::login, logout::logout, signup::signup, verify::verify},
 		music::{
-			get_cover_image::get_cover_image, get_music::get_music, increment_times_played::incr_times_played,
-			save_music::save_music, search_music::search_music, send_music::send_music,
+			get_cover_image::get_cover_image,
+			get_music::get_music,
+			recently_played::{get_recently_played::get_recently_played, log_song_play::log_song_play},
+			save_music::save_music,
+			search_music::search_music,
+			send_music::send_music,
+			trending::{
+				get_trending_songs::{self, get_trending_songs},
+				increment_times_played::incr_times_played,
+			},
 		},
 		playlist::{
 			add_song_to_playlist::add_song_to_playlist, create_new_playlist::create_playlist,
@@ -13,8 +21,7 @@ use crate::{
 		socket::websocket_handler,
 		users::{
 			add_friend::add_friend, get_user::get_user, get_user_pfp::get_user_pfp, remove_friend::remove_friend,
-			update_pfp::update_pfp,
-			search_user::search_user,
+			search_user::search_user, update_pfp::update_pfp,
 		},
 	},
 };
@@ -33,8 +40,11 @@ pub fn configure_routes(app_state: AppState) -> Router {
 		.route("/verify", get(verify))
 		.route("/music/:music_id", get(send_music))
 		.route("/image/:filename", get(get_cover_image))
+		.route("/music/log_song_play", post(log_song_play))
+		.route("/music/get_recently_played", get(get_recently_played))
 		.route("/save_music", post(save_music))
 		.route("/get_music", get(get_music))
+		.route("/get_trending", get(get_trending_songs))
 		.route("/search", get(search_music))
 		.route("/playlist/new", post(create_playlist))
 		.route("/playlist/add_song", post(add_song_to_playlist))

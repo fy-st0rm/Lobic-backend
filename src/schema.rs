@@ -12,6 +12,14 @@ diesel::table! {
 }
 
 diesel::table! {
+    play_log (user_id, music_id, music_played_date_time) {
+        user_id -> Text,
+        music_id -> Text,
+        music_played_date_time -> Text,
+    }
+}
+
+diesel::table! {
     playlist_shares (playlist_id, shared_to_user_id) {
         playlist_id -> Text,
         owner_user_id -> Text,
@@ -55,6 +63,8 @@ diesel::table! {
     }
 }
 
+diesel::joinable!(play_log -> music (music_id));
+diesel::joinable!(play_log -> users (user_id));
 diesel::joinable!(playlist_shares -> playlists (playlist_id));
 diesel::joinable!(playlist_songs -> music (music_id));
 diesel::joinable!(playlist_songs -> playlists (playlist_id));
@@ -62,6 +72,7 @@ diesel::joinable!(playlists -> users (user_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
     music,
+    play_log,
     playlist_shares,
     playlist_songs,
     playlists,

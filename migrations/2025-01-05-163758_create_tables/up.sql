@@ -46,3 +46,14 @@ CREATE TABLE playlist_shares (
 	share_permission TEXT NOT NULL,
 	PRIMARY KEY (playlist_id, shared_to_user_id)
 );
+
+--for Recently Played of each user
+CREATE TABLE play_log (
+	user_id TEXT NOT NULL REFERENCES users(user_id),
+	music_id TEXT NOT NULL REFERENCES music(music_id),
+	music_played_date_time TEXT NOT NULL,
+	PRIMARY KEY (user_id,music_id,music_played_date_time)
+);
+
+
+--TODO : favourites

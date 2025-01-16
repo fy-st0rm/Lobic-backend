@@ -15,7 +15,6 @@ pub struct PlaylistMusicResponse {
 	pub title: String,
 	pub album: String,
 	pub genre: String,
-	pub position: i32,
 	pub song_added_date_time: String,
 }
 
@@ -72,7 +71,6 @@ pub async fn get_playlist_music(
 			music::title,
 			music::album,
 			music::genre,
-			playlist_songs::position,
 			playlist_songs::song_added_date_time,
 		))
 		.into_boxed();

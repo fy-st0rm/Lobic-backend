@@ -46,7 +46,6 @@ pub struct Playlist {
 pub struct PlaylistSong {
 	pub playlist_id: String,
 	pub music_id: String,
-	pub position: i32,
 	pub song_added_date_time: String,
 }
 

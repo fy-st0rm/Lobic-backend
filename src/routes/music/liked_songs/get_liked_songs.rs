@@ -48,6 +48,7 @@ pub async fn get_liked_songs(
 	let mut query = liked_songs::table
 		.filter(liked_songs::user_id.eq(&params.user_id))
 		.inner_join(music::table)
+		.order(liked_songs::song_added_date_time.desc()) // Most recent first
 		.select((
 			music::music_id,
 			music::artist,

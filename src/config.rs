@@ -37,9 +37,14 @@ pub enum OpCode {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum MusicState {
-	PLAYING,
+	PLAY,
 	PAUSE,
-	CHANGE,
+	#[allow(non_camel_case_types)]
+	CHANGE_MUSIC,
+	#[allow(non_camel_case_types)]
+	CHANGE_TIME,
+	#[allow(non_camel_case_types)]
+	CHANGE_VOLUME,
 }
 
 pub fn allowed_origins(origin: &HeaderValue, _request: &Parts) -> bool {

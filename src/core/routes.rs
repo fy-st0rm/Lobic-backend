@@ -44,7 +44,7 @@ pub fn configure_routes(app_state: AppState) -> Router {
 		.route("/music/get_recently_played", get(get_recently_played))
 		.route("/save_music", post(save_music))
 		.route("/get_music", get(get_music))
-		.route("/get_trending", get(get_trending_songs))
+		.route("/music/get_trending", get(get_trending_songs))
 		.route("/search", get(search_music))
 		.route("/playlist/new", post(create_playlist))
 		.route("/playlist/add_song", post(add_song_to_playlist))

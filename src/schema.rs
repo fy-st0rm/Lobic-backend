@@ -12,7 +12,7 @@ diesel::table! {
 }
 
 diesel::table! {
-    play_log (user_id, music_id, music_played_date_time) {
+    play_log (user_id, music_id) {
         user_id -> Text,
         music_id -> Text,
         music_played_date_time -> Text,

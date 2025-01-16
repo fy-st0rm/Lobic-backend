@@ -29,12 +29,15 @@ pub async fn log_song_play(State(app_state): State<AppState>, Json(payload): Jso
 	let new_play_log = PlayLog {
 		user_id: payload.user_id,
 		music_id: payload.music_id,
-		music_played_date_time: curr_music_played_date_time,
+		music_played_date_time: curr_music_played_date_time.clone(),
 	};
 
-	// Insert the new play log into the database
+	// Insert or update the play log
 	match diesel::insert_into(play_log)
 		.values(&new_play_log)
+		.on_conflict((user_id, music_id)) // Handle conflict on (user_id, music_id)
+		.do_update()
+		.set(music_played_date_time.eq(curr_music_played_date_time)) // Update the timestamp
 		.execute(&mut db_conn)
 	{
 		Ok(_) => Response::builder()

@@ -24,6 +24,7 @@ diesel::table! {
         user_id -> Text,
         music_id -> Text,
         music_played_date_time -> Text,
+        user_times_played -> Integer,
     }
 }
 

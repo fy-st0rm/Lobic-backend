@@ -12,6 +12,9 @@ pub mod music {
 		pub mod get_trending_songs;
 		pub mod increment_times_played;
 	}
+	pub mod top_tracks {
+		pub mod get_top_tracks;
+	}
 	pub mod liked_songs {
 		pub mod add_to_liked_song;
 		pub mod get_liked_songs;

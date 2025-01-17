@@ -64,6 +64,7 @@ pub struct PlayLog {
 	pub user_id: String,
 	pub music_id: String,
 	pub music_played_date_time: String,
+	pub user_times_played: i32,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

@@ -13,6 +13,7 @@ use crate::{
 			save_music::save_music,
 			search_music::search_music,
 			send_music::send_music,
+			top_tracks::get_top_tracks::get_top_tracks,
 			trending::{get_trending_songs::get_trending_songs, increment_times_played::incr_times_played},
 		},
 		playlist::{
@@ -49,6 +50,7 @@ pub fn configure_routes(app_state: AppState) -> Router {
 		.route("/save_music", post(save_music))
 		.route("/get_music", get(get_music))
 		.route("/music/get_trending", get(get_trending_songs))
+		.route("/music/get_top_tracks", get(get_top_tracks))
 		.route("/search", get(search_music))
 		.route("/playlist/new", post(create_playlist))
 		.route("/playlist/add_song", post(add_song_to_playlist))

@@ -52,6 +52,7 @@ CREATE TABLE play_log (
 	user_id TEXT NOT NULL REFERENCES users(user_id),
 	music_id TEXT NOT NULL REFERENCES music(music_id),
 	music_played_date_time TEXT NOT NULL,
+	user_times_played INTEGER NOT NULL,
 	PRIMARY KEY (user_id,music_id)
 );
 

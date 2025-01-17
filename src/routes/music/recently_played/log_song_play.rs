@@ -27,9 +27,10 @@ pub async fn log_song_play(State(app_state): State<AppState>, Json(payload): Jso
 
 	// Create a new PlayLog record
 	let new_play_log = PlayLog {
-		user_id: payload.user_id,
-		music_id: payload.music_id,
+		user_id: payload.user_id.clone(),
+		music_id: payload.music_id.clone(),
 		music_played_date_time: curr_music_played_date_time.clone(),
+		user_times_played: 1, // Initialize user_times_played to 1
 	};
 
 	// Insert or update the play log
@@ -37,7 +38,10 @@ pub async fn log_song_play(State(app_state): State<AppState>, Json(payload): Jso
 		.values(&new_play_log)
 		.on_conflict((user_id, music_id)) // Handle conflict on (user_id, music_id)
 		.do_update()
-		.set(music_played_date_time.eq(curr_music_played_date_time)) // Update the timestamp
+		.set((
+			music_played_date_time.eq(curr_music_played_date_time),
+			user_times_played.eq(user_times_played + 1), // Increment user_times_played
+		))
 		.execute(&mut db_conn)
 	{
 		Ok(_) => Response::builder()

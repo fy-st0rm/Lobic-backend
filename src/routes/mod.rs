@@ -43,3 +43,4 @@ pub mod auth {
 	pub mod verify;
 }
 pub mod socket;
+pub mod get_lobby;

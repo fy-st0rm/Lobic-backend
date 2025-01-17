@@ -21,6 +21,7 @@ use crate::{
 			get_playlist_music::get_playlist_music, get_users_playlists::get_users_playlists,
 		},
 		socket::websocket_handler,
+		get_lobby::get_lobby,
 		users::{
 			add_friend::add_friend, get_user::get_user, get_user_pfp::get_user_pfp, remove_friend::remove_friend,
 			search_user::search_user, update_pfp::update_pfp,
@@ -63,6 +64,7 @@ pub fn configure_routes(app_state: AppState) -> Router {
 		.route("/remove_friend", post(remove_friend))
 		.route("/search_user", get(search_user))
 		.route("/ws", get(websocket_handler))
+		.route("/get_lobby/:lobby_id", get(get_lobby))
 		.with_state(app_state)
 }
 

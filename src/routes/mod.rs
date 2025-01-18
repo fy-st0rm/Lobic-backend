@@ -18,8 +18,8 @@ pub mod music {
 	pub mod liked_songs {
 		pub mod add_to_liked_song;
 		pub mod get_liked_songs;
-		pub mod remove_from_liked_songs;
 		pub mod is_song_liked;
+		pub mod remove_from_liked_songs;
 		pub mod toggle_liked_song;
 	}
 }
@@ -32,6 +32,7 @@ pub mod playlist {
 pub mod users {
 	pub mod add_friend;
 	pub mod get_user;
+	pub mod get_user_data;
 	pub mod get_user_pfp;
 	pub mod remove_friend;
 	pub mod search_user;
@@ -44,5 +45,5 @@ pub mod auth {
 	pub mod signup;
 	pub mod verify;
 }
-pub mod socket;
 pub mod get_lobby;
+pub mod socket;

@@ -23,7 +23,7 @@ pub async fn is_song_liked(
 		Err(err) => {
 			return Response::builder()
 				.status(StatusCode::INTERNAL_SERVER_ERROR)
-				.body(format!("false"))
+				.body(format!("{err}"))
 				.unwrap();
 		}
 	};

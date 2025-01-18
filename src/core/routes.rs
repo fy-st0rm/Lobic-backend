@@ -23,8 +23,13 @@ use crate::{
 		},
 		socket::websocket_handler,
 		users::{
-			add_friend::add_friend, get_user::get_user, get_user_pfp::get_user_pfp, remove_friend::remove_friend,
-			search_user::search_user, update_pfp::update_pfp,
+			add_friend::add_friend,
+			get_user::get_user,
+			get_user_data::{self, get_user_data},
+			get_user_pfp::get_user_pfp,
+			remove_friend::remove_friend,
+			search_user::search_user,
+			update_pfp::update_pfp,
 		},
 	},
 };
@@ -62,6 +67,7 @@ pub fn configure_routes(app_state: AppState) -> Router {
 		.route("/music/incr_times_played/:music_uuid", post(incr_times_played))
 		.route("/user/update_pfp", post(update_pfp))
 		.route("/user/get_pfp/:filename", get(get_user_pfp))
+		.route("/user/get_user_data/:user_uuid", get(get_user_data))
 		.route("/add_friend", post(add_friend))
 		.route("/remove_friend", post(remove_friend))
 		.route("/search_user", get(search_user))

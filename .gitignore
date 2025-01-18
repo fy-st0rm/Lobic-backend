@@ -16,9 +16,10 @@
 #added by rain
 /storage/*
 !storage
+!storage/.gitkeep
 
 /demo_songs/personal_songs/*
 !demo_songs/personal_songs/
-!demo_songs/personal_songs/[SPOTDOWNLOADER.COM] すずめの戸締り　/[SPOTDOWNLOADER.COM] Redbone.mp3
+!demo_songs/personal_songs/.gitkeep
 # Added by st0rm
 database.db

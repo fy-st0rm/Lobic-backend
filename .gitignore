@@ -16,8 +16,9 @@
 #added by rain
 /storage/*
 !storage
+
 /demo_songs/personal_songs/*
 !demo_songs/personal_songs/
-
+!demo_songs/personal_songs/[SPOTDOWNLOADER.COM] すずめの戸締り　/[SPOTDOWNLOADER.COM] Redbone.mp3
 # Added by st0rm
 database.db

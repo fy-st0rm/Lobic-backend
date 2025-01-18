@@ -14,8 +14,10 @@
 /target
 
 #added by rain
-/storage
-/demo_songs/personal_songs
+/storage/*
+!storage
+/demo_songs/personal_songs/*
+!demo_songs/personal_songs/
 
 # Added by st0rm
 database.db

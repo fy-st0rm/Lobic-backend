@@ -2,12 +2,13 @@ use crate::{
 	core::app_state::AppState,
 	routes::{
 		auth::{login::login, logout::logout, signup::signup, verify::verify},
+		get_lobby::get_lobby,
 		music::{
 			get_cover_image::get_cover_image,
 			get_music::get_music,
 			liked_songs::{
-				add_to_liked_song::add_to_liked_songs, get_liked_songs::get_liked_songs,
-				remove_from_liked_songs::remove_from_liked_songs,
+				add_to_liked_song::add_to_liked_songs, get_liked_songs::get_liked_songs, is_song_liked::is_song_liked,
+				remove_from_liked_songs::remove_from_liked_songs, toggle_liked_song::toggle_liked_song,
 			},
 			recently_played::{get_recently_played::get_recently_played, log_song_play::log_song_play},
 			save_music::save_music,
@@ -21,7 +22,6 @@ use crate::{
 			get_playlist_music::get_playlist_music, get_users_playlists::get_users_playlists,
 		},
 		socket::websocket_handler,
-		get_lobby::get_lobby,
 		users::{
 			add_friend::add_friend, get_user::get_user, get_user_pfp::get_user_pfp, remove_friend::remove_friend,
 			search_user::search_user, update_pfp::update_pfp,
@@ -48,6 +48,8 @@ pub fn configure_routes(app_state: AppState) -> Router {
 		.route("/music/liked_song/add", post(add_to_liked_songs))
 		.route("/music/liked_song/remove", post(remove_from_liked_songs))
 		.route("/music/liked_song/get", get(get_liked_songs))
+		.route("/music/liked_song/is_song_liked", get(is_song_liked))
+		.route("/music/liked_song/toggle_like", post(toggle_liked_song))
 		.route("/save_music", post(save_music))
 		.route("/get_music", get(get_music))
 		.route("/music/get_trending", get(get_trending_songs))

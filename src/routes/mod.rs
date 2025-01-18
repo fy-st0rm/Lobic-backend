@@ -19,6 +19,8 @@ pub mod music {
 		pub mod add_to_liked_song;
 		pub mod get_liked_songs;
 		pub mod remove_from_liked_songs;
+		pub mod is_song_liked;
+		pub mod toggle_liked_song;
 	}
 }
 pub mod playlist {

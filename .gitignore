@@ -14,7 +14,12 @@
 /target
 
 #added by rain
-/storage
+/storage/*
+!storage
+!storage/.gitkeep
 
+/demo_songs/personal_songs/*
+!demo_songs/personal_songs/
+!demo_songs/personal_songs/.gitkeep
 # Added by st0rm
 database.db

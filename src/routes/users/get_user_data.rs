@@ -2,7 +2,6 @@ use crate::core::app_state::AppState;
 use crate::lobic_db::db::*;
 use crate::lobic_db::models::User;
 use crate::schema::users::dsl::*;
-use crate::config::{IP, PORT};
 
 use axum::{
 	extract::{Path, State},
@@ -42,7 +41,6 @@ pub async fn get_user_data(
 				"id": user.user_id.clone(),
 				"username": user.username,
 				"email": user.email,
-				"pfp": format!("{}:{}/user/get_pfp/{}.png", IP, PORT, user.user_id),
 			}).to_string();
 			Response::builder().status(StatusCode::OK).body(user_data).unwrap()
 		}

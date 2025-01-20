@@ -157,10 +157,10 @@ fn handle_create_lobby(
 	Ok(response)
 }
 
-fn handle_join_lobby(value: Value, db_pool: &DatabasePool, lobby_pool: &LobbyPool) -> Result<SocketResponse, String> {
+fn handle_join_lobby(value: Value, db_pool: &DatabasePool, lobby_pool: &LobbyPool, user_pool: &UserPool) -> Result<SocketResponse, String> {
 	let payload: JoinLobbyPayload = serde_json::from_value(value).map_err(|x| x.to_string())?;
 
-	let res = lobby_pool.join_lobby(&payload.lobby_id, &payload.user_id, db_pool)?;
+	let res = lobby_pool.join_lobby(&payload.lobby_id, &payload.user_id, db_pool, user_pool)?;
 	let response = SocketResponse {
 		op_code: OpCode::OK,
 		r#for: OpCode::JOIN_LOBBY,
@@ -406,7 +406,7 @@ pub async fn handle_socket(socket: WebSocket, State(app_state): State<AppState>)
 				let response = match payload.op_code {
 					OpCode::CONNECT => handle_connect(&tx, payload.value, &db_pool, &user_pool),
 					OpCode::CREATE_LOBBY => handle_create_lobby(payload.value, &db_pool, &lobby_pool, &user_pool),
-					OpCode::JOIN_LOBBY => handle_join_lobby(payload.value, &db_pool, &lobby_pool),
+					OpCode::JOIN_LOBBY => handle_join_lobby(payload.value, &db_pool, &lobby_pool, &user_pool),
 					OpCode::LEAVE_LOBBY => handle_leave_lobby(payload.value, &db_pool, &lobby_pool, &user_pool),
 					OpCode::GET_LOBBY_IDS => handle_get_lobby_ids(&lobby_pool),
 					OpCode::GET_LOBBY_MEMBERS => handle_get_lobby_members(payload.value, &lobby_pool),

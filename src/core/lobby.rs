@@ -134,7 +134,7 @@ impl LobbyPool {
 		Ok(response)
 	}
 
-	pub fn join_lobby(&self, lobby_id: &str, client_id: &str, db_pool: &DatabasePool) -> Result<Value, String> {
+	pub fn join_lobby(&self, lobby_id: &str, client_id: &str, db_pool: &DatabasePool, user_pool: &UserPool) -> Result<Value, String> {
 		if !user_exists(client_id, db_pool) {
 			return Err(format!("Invalid client id: {}", client_id));
 		}
@@ -152,8 +152,23 @@ impl LobbyPool {
 			return Err(format!("Client: {} is already in lobby: {}", client_id, lobby_id));
 		}
 
-		// Adding the client and pushing into the pool
+		// Adding the client
 		lobby.clients.push(client_id.to_string());
+
+		// Broadcasting to the members of the lobby that someone has left
+		for client in &lobby.clients {
+			if let Some(conn) = user_pool.get(&client) {
+				let response = json!({
+					"op_code": OpCode::OK,
+					"for": OpCode::GET_LOBBY_MEMBERS,
+					"value": lobby.clients.clone(),
+				})
+				.to_string();
+				let _ = conn.send(Message::Text(response));
+			}
+		}
+
+		// Pushing the new lobby
 		self.insert(lobby_id, lobby);
 
 		// Constructing response
@@ -180,6 +195,7 @@ impl LobbyPool {
 
 		lobby.clients.retain(|id| id != client_id);
 
+		// Broadcasting to the members of the lobby that someone has left
 		for client in &lobby.clients {
 			if let Some(conn) = user_pool.get(&client) {
 				let response = json!({

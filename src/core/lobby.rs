@@ -164,7 +164,7 @@ impl LobbyPool {
 		Ok(response)
 	}
 
-	pub fn leave_lobby(&self, lobby_id: &str, client_id: &str, db_pool: &DatabasePool) -> Result<String, String> {
+	pub fn leave_lobby(&self, lobby_id: &str, client_id: &str, db_pool: &DatabasePool, user_pool: &UserPool) -> Result<String, String> {
 		if !user_exists(client_id, db_pool) {
 			return Err(format!("Invalid client id: {}", client_id));
 		}
@@ -179,6 +179,19 @@ impl LobbyPool {
 		};
 
 		lobby.clients.retain(|id| id != client_id);
+
+		for client in &lobby.clients {
+			if let Some(conn) = user_pool.get(&client) {
+				let response = json!({
+					"op_code": OpCode::OK,
+					"for": OpCode::GET_LOBBY_MEMBERS,
+					"value": lobby.clients.clone(),
+				})
+				.to_string();
+				let _ = conn.send(Message::Text(response));
+			}
+		}
+
 		Ok("Sucessfully left lobby".to_string())
 	}
 

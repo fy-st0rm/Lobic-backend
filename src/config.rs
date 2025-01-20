@@ -23,6 +23,8 @@ pub enum OpCode {
 	DELETE_LOBBY,
 	#[allow(non_camel_case_types)]
 	GET_LOBBY_IDS,
+	#[allow(non_camel_case_types)]
+	GET_LOBBY_MEMBERS,
 	MESSAGE,
 	#[allow(non_camel_case_types)]
 	GET_MESSAGES,

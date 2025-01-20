@@ -6,6 +6,7 @@ pub const PORT: &str = "8080";
 pub const COVER_IMG_STORAGE: &str = "./storage/cover_images";
 pub const MUSIC_STORAGE: &str = "./storage/music_db";
 pub const USER_PFP_STORAGE: &str = "./storage/users_pfps";
+pub const PLAYLIST_COVER_IMG_STORAGE: &str = "./storage/playlists_cover_img";
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum OpCode {

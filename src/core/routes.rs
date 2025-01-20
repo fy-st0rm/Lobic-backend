@@ -20,16 +20,12 @@ use crate::{
 		playlist::{
 			add_song_to_playlist::add_song_to_playlist, create_new_playlist::create_playlist,
 			get_playlist_music::get_playlist_music, get_users_playlists::get_users_playlists,
+			update_playlist_cover_img::update_playlist_cover_img,
 		},
 		socket::websocket_handler,
 		users::{
-			add_friend::add_friend,
-			get_user::get_user,
-			get_user_data::{self, get_user_data},
-			get_user_pfp::get_user_pfp,
-			remove_friend::remove_friend,
-			search_user::search_user,
-			update_pfp::update_pfp,
+			add_friend::add_friend, get_user::get_user, get_user_data::get_user_data, get_user_pfp::get_user_pfp,
+			remove_friend::remove_friend, search_user::search_user, update_pfp::update_pfp,
 		},
 	},
 };
@@ -64,6 +60,7 @@ pub fn configure_routes(app_state: AppState) -> Router {
 		.route("/playlist/add_song", post(add_song_to_playlist))
 		.route("/playlist/get_by_uuid", get(get_playlist_music))
 		.route("/playlist/get_users_playlists", get(get_users_playlists))
+		.route("/playlist/update_cover_img", post(update_playlist_cover_img))
 		.route("/music/incr_times_played/:music_uuid", post(incr_times_played))
 		.route("/user/update_pfp", post(update_pfp))
 		.route("/user/get_pfp/:filename", get(get_user_pfp))

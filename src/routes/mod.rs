@@ -28,6 +28,7 @@ pub mod playlist {
 	pub mod create_new_playlist;
 	pub mod get_playlist_music;
 	pub mod get_users_playlists;
+	pub mod update_playlist_cover_img;
 }
 pub mod users {
 	pub mod add_friend;

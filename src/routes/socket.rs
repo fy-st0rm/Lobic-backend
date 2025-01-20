@@ -73,6 +73,21 @@ struct SetMusicStatePayload {
 #[derive(Serialize, Deserialize)]
 struct SyncMusicPayload {
 	pub lobby_id: String,
+	pub current_state: MusicState,
+}
+
+// Response structure
+#[derive(Debug, Serialize, Deserialize)]
+struct SocketResponse {
+	pub op_code: OpCode,
+	pub r#for: OpCode,
+	pub value: Value,
+}
+
+impl SocketResponse {
+	pub fn to_string(&self) -> String {
+		serde_json::to_string(self).unwrap()
+	}
 }
 
 // Endpoint handlers
@@ -86,19 +101,19 @@ fn handle_connect(
 	value: Value,
 	db_pool: &DatabasePool,
 	user_pool: &UserPool,
-) -> Result<String, String> {
+) -> Result<SocketResponse, String> {
 	let payload: ConnectPayload = serde_json::from_value(value).map_err(|x| x.to_string())?;
 
 	if !user_exists(&payload.user_id, db_pool) {
 		return Err(format!("Invalid user_id: {}", payload.user_id));
 	}
 
-	let response = json!({
-		"op_code": OpCode::OK,
-		"for": OpCode::CONNECT,
-		"value": "Sucessfully connected to ws."
-	})
-	.to_string();
+	let response = SocketResponse {
+		op_code: OpCode::OK,
+		r#for: OpCode::CONNECT,
+		value: "Sucessfully connected to ws.".into(),
+	};
+
 	user_pool.insert(&payload.user_id, tx);
 
 	Ok(response)
@@ -109,27 +124,27 @@ fn handle_create_lobby(
 	db_pool: &DatabasePool,
 	lobby_pool: &LobbyPool,
 	user_pool: &UserPool,
-) -> Result<String, String> {
+) -> Result<SocketResponse, String> {
 	let payload: CreateLobbyPayload = serde_json::from_value(value).map_err(|x| x.to_string())?;
 
 	let res = lobby_pool.create_lobby(&payload.host_id, db_pool)?;
-	let response = json!({
-		"op_code": OpCode::OK,
-		"for": OpCode::CREATE_LOBBY,
-		"value": res
-	})
-	.to_string();
+
+	let response = SocketResponse {
+		op_code: OpCode::OK,
+		r#for: OpCode::CREATE_LOBBY,
+		value: res,
+	};
 
 	// TODO: Broadcast to friends only
 	// Broadcasting to every clients
 	let conns = user_pool.get_conns();
 	for conn in conns {
 		let ids = lobby_pool.get_ids();
-		let response = json!({
-			"op_code": OpCode::OK,
-			"for": OpCode::GET_LOBBY_IDS,
-			"value": ids
-		})
+		let response = SocketResponse { 
+			op_code: OpCode::OK,
+			r#for: OpCode::GET_LOBBY_IDS,
+			value: ids.into(),
+		}
 		.to_string();
 		let _ = conn.send(Message::Text(response));
 	}
@@ -137,16 +152,15 @@ fn handle_create_lobby(
 	Ok(response)
 }
 
-fn handle_join_lobby(value: Value, db_pool: &DatabasePool, lobby_pool: &LobbyPool) -> Result<String, String> {
+fn handle_join_lobby(value: Value, db_pool: &DatabasePool, lobby_pool: &LobbyPool) -> Result<SocketResponse, String> {
 	let payload: JoinLobbyPayload = serde_json::from_value(value).map_err(|x| x.to_string())?;
 
 	let res = lobby_pool.join_lobby(&payload.lobby_id, &payload.user_id, db_pool)?;
-	let response = json!({
-		"op_code": OpCode::OK,
-		"for": OpCode::JOIN_LOBBY,
-		"value": res
-	})
-	.to_string();
+	let response = SocketResponse {
+		op_code: OpCode::OK,
+		r#for: OpCode::JOIN_LOBBY,
+		value: res.into(),
+	};
 
 	Ok(response)
 }
@@ -156,7 +170,7 @@ fn handle_leave_lobby(
 	db_pool: &DatabasePool,
 	lobby_pool: &LobbyPool,
 	user_pool: &UserPool,
-) -> Result<String, String> {
+) -> Result<SocketResponse, String> {
 	let payload: LeaveLobbyPayload = serde_json::from_value(value).map_err(|x| x.to_string())?;
 
 	let lobby = match lobby_pool.get(&payload.lobby_id) {
@@ -174,12 +188,11 @@ fn handle_leave_lobby(
 		let conns = user_pool.get_conns();
 		for conn in conns {
 			let ids = lobby_pool.get_ids();
-			let response = json!({
-				"op_code": OpCode::OK,
-				"for": OpCode::GET_LOBBY_IDS,
-				"value": ids
-			})
-			.to_string();
+			let response = SocketResponse {
+				op_code: OpCode::OK,
+				r#for: OpCode::GET_LOBBY_IDS,
+				value: ids.into(),
+			}.to_string();
 			let _ = conn.send(Message::Text(response));
 		}
 	} else {
@@ -187,12 +200,11 @@ fn handle_leave_lobby(
 	}
 
 	let ok = res?;
-	let response = json!({
-		"op_code": OpCode::OK,
-		"for": OpCode::LEAVE_LOBBY,
-		"value": ok
-	})
-	.to_string();
+	let response = SocketResponse {
+		op_code: OpCode::OK,
+		r#for: OpCode::LEAVE_LOBBY,
+		value: ok.into(),
+	};
 
 	Ok(response)
 }
@@ -202,7 +214,7 @@ fn handle_message(
 	db_pool: &DatabasePool,
 	lobby_pool: &LobbyPool,
 	user_pool: &UserPool,
-) -> Result<String, String> {
+) -> Result<SocketResponse, String> {
 	let payload: MessagePayload = serde_json::from_value(value).map_err(|x| x.to_string())?;
 
 	lobby_pool.append_message(&payload.lobby_id, &payload.user_id, &payload.message, db_pool)?;
@@ -212,12 +224,11 @@ fn handle_message(
 
 	// Broadcasting the message to everyone in the lobby
 	for client_id in lobby.clients {
-		let response = json!({
-			"op_code": OpCode::OK,
-			"for": OpCode::GET_MESSAGES,
-			"value": msgs
-		})
-		.to_string();
+		let response = SocketResponse {
+			op_code: OpCode::OK,
+			r#for: OpCode::GET_MESSAGES,
+			value: msgs.clone().into(),
+		}.to_string();
 
 		let client_conn = match user_pool.get(&client_id) {
 			Some(conn) => conn,
@@ -231,17 +242,16 @@ fn handle_message(
 		let _ = client_conn.send(Message::Text(response));
 	}
 
-	let response = json!({
-		"op_code": OpCode::OK,
-		"for": OpCode::MESSAGE,
-		"value": "Sucessfully sent message"
-	})
-	.to_string();
+	let response = SocketResponse {
+		op_code: OpCode::OK,
+		r#for: OpCode::MESSAGE,
+		value: "Sucessfully sent message".into(),
+	};
 
 	Ok(response)
 }
 
-fn handle_get_messages(value: Value, lobby_pool: &LobbyPool) -> Result<String, String> {
+fn handle_get_messages(value: Value, lobby_pool: &LobbyPool) -> Result<SocketResponse, String> {
 	let payload: GetMessagePayload = serde_json::from_value(value).map_err(|x| x.to_string())?;
 
 	let msgs = match lobby_pool.get_msgs(&payload.lobby_id) {
@@ -249,28 +259,26 @@ fn handle_get_messages(value: Value, lobby_pool: &LobbyPool) -> Result<String, S
 		None => return Err(format!("Invalid lobby id: {}", payload.lobby_id)),
 	};
 
-	let response = json!({
-		"op_code": OpCode::OK,
-		"for": OpCode::GET_MESSAGES,
-		"value": msgs
-	})
-	.to_string();
+	let response = SocketResponse {
+		op_code: OpCode::OK,
+		r#for: OpCode::GET_MESSAGES,
+		value: msgs.into(),
+	};
 
 	Ok(response)
 }
 
-fn handle_get_lobby_ids(lobby_pool: &LobbyPool) -> Result<String, String> {
+fn handle_get_lobby_ids(lobby_pool: &LobbyPool) -> Result<SocketResponse, String> {
 	let ids = lobby_pool.get_ids();
-	let response = json!({
-		"op_code": OpCode::OK,
-		"for": OpCode::GET_LOBBY_IDS,
-		"value": ids
-	})
-	.to_string();
+	let response = SocketResponse {
+		op_code: OpCode::OK,
+		r#for: OpCode::GET_LOBBY_IDS,
+		value: ids.into(),
+	};
 	Ok(response)
 }
 
-fn handle_set_music_state(value: Value, lobby_pool: &LobbyPool, user_pool: &UserPool) -> Result<String, String> {
+fn handle_set_music_state(value: Value, lobby_pool: &LobbyPool, user_pool: &UserPool) -> Result<SocketResponse, String> {
 	let payload: SetMusicStatePayload = serde_json::from_value(value).map_err(|x| x.to_string())?;
 
 	let music = Music {
@@ -294,12 +302,11 @@ fn handle_set_music_state(value: Value, lobby_pool: &LobbyPool, user_pool: &User
 			continue;
 		}
 
-		let response = json!({
-			"op_code": OpCode::OK,
-			"for": OpCode::SYNC_MUSIC,
-			"value": music,
-		})
-		.to_string();
+		let response = SocketResponse {
+			op_code: OpCode::OK,
+			r#for: OpCode::SYNC_MUSIC,
+			value: music.clone().into(),
+		}.to_string();
 
 		let client_conn = match user_pool.get(&client_id) {
 			Some(conn) => conn,
@@ -313,17 +320,16 @@ fn handle_set_music_state(value: Value, lobby_pool: &LobbyPool, user_pool: &User
 		let _ = client_conn.send(Message::Text(response));
 	}
 
-	let response = json!({
-		"op_code": OpCode::OK,
-		"for": OpCode::SET_MUSIC_STATE,
-		"value": "Sucessfully set music state"
-	})
-	.to_string();
+	let response = SocketResponse {
+		op_code: OpCode::OK,
+		r#for: OpCode::SET_MUSIC_STATE,
+		value: "Sucessfully set music state".into(),
+	};
 
 	Ok(response)
 }
 
-fn handle_sync_music(value: Value, lobby_pool: &LobbyPool) -> Result<String, String> {
+fn handle_sync_music(value: Value, lobby_pool: &LobbyPool) -> Result<SocketResponse, String> {
 	let payload: SyncMusicPayload = serde_json::from_value(value).map_err(|x| x.to_string())?;
 
 	let lobby = match lobby_pool.get(&payload.lobby_id) {
@@ -331,12 +337,17 @@ fn handle_sync_music(value: Value, lobby_pool: &LobbyPool) -> Result<String, Str
 		None => return Err(format!("Invalid lobby id: {}", payload.lobby_id)),
 	};
 
-	let music = lobby.music;
-	let response = json!({
-		"op_code": OpCode::SYNC_MUSIC,
-		"value": music
-	})
-	.to_string();
+	let mut music = lobby.music;
+
+	if payload.current_state == MusicState::EMPTY && music.id.len() > 0 {
+		music.state = MusicState::CHANGE_MUSIC;
+	}
+
+	let response = SocketResponse {
+		op_code: OpCode::SYNC_MUSIC,
+		r#for: OpCode::SYNC_MUSIC,
+		value: music.into(),
+	};
 
 	Ok(response)
 }
@@ -383,8 +394,8 @@ pub async fn handle_socket(socket: WebSocket, State(app_state): State<AppState>)
 
 				// Returning response to the client
 				match response {
-					Ok(ok) => {
-						let _ = tx.send(Message::Text(ok));
+					Ok(soc_res) => {
+						let _ = tx.send(Message::Text(soc_res.to_string()));
 					}
 					Err(err) => {
 						let msg = json!({

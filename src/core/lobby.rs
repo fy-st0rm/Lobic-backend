@@ -18,6 +18,13 @@ pub struct ChatValue {
 }
 type Chat = Vec<ChatValue>;
 
+impl From<ChatValue> for Value {
+	fn from(chat_value: ChatValue) -> Self {
+		serde_json::to_value(&chat_value).unwrap()
+	}
+}
+
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Music {
 	pub id: String,
@@ -40,6 +47,13 @@ impl Music {
 		}
 	}
 }
+
+impl From<Music> for Value {
+	fn from(music: Music) -> Self {
+		serde_json::to_value(&music).unwrap()
+	}
+}
+
 
 #[derive(Debug, Clone)]
 pub struct Lobby {

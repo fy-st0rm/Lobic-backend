@@ -25,7 +25,7 @@ use crate::{
 		users::{
 			add_friend::add_friend,
 			get_user::get_user,
-			get_user_data::{self, get_user_data},
+			get_user_data::{get_user_data},
 			get_user_pfp::get_user_pfp,
 			remove_friend::remove_friend,
 			search_user::search_user,

@@ -35,7 +35,7 @@ pub enum OpCode {
 	REMOVE_FRIEND,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub enum MusicState {
 	PLAY,
 	PAUSE,
@@ -45,6 +45,7 @@ pub enum MusicState {
 	CHANGE_TIME,
 	#[allow(non_camel_case_types)]
 	CHANGE_VOLUME,
+	EMPTY,
 }
 
 pub fn allowed_origins(origin: &HeaderValue, _request: &Parts) -> bool {

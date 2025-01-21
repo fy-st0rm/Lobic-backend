@@ -19,8 +19,8 @@ use crate::{
 		},
 		playlist::{
 			add_song_to_playlist::add_song_to_playlist, create_new_playlist::create_playlist,
-			get_playlist_music::get_playlist_music, get_users_playlists::get_users_playlists,
-			update_playlist_cover_img::update_playlist_cover_img,
+			get_playlist_cover_img::get_playlist_cover_img, get_playlist_music::get_playlist_music,
+			get_users_playlists::get_users_playlists, update_playlist_cover_img::update_playlist_cover_img,
 		},
 		socket::websocket_handler,
 		users::{
@@ -36,12 +36,14 @@ use axum::{
 
 pub fn configure_routes(app_state: AppState) -> Router {
 	Router::new()
+		//auth
 		.route("/", get(index))
 		.route("/get_user", get(get_user))
 		.route("/signup", post(signup))
 		.route("/login", post(login))
 		.route("/logout", post(logout))
 		.route("/verify", get(verify))
+		//music
 		.route("/music/:music_id", get(send_music))
 		.route("/image/:filename", get(get_cover_image))
 		.route("/music/log_song_play", post(log_song_play))
@@ -55,19 +57,23 @@ pub fn configure_routes(app_state: AppState) -> Router {
 		.route("/get_music", get(get_music))
 		.route("/music/get_trending", get(get_trending_songs))
 		.route("/music/get_top_tracks", get(get_top_tracks))
+		.route("/music/incr_times_played/:music_uuid", post(incr_times_played))
 		.route("/search", get(search_music))
+		//playlist stuff
 		.route("/playlist/new", post(create_playlist))
 		.route("/playlist/add_song", post(add_song_to_playlist))
 		.route("/playlist/get_by_uuid", get(get_playlist_music))
 		.route("/playlist/get_users_playlists", get(get_users_playlists))
 		.route("/playlist/update_cover_img", post(update_playlist_cover_img))
-		.route("/music/incr_times_played/:music_uuid", post(incr_times_played))
+		.route("/playlist/cover_img/:playlist_id", get(get_playlist_cover_img))
+		//user stuff
 		.route("/user/update_pfp", post(update_pfp))
 		.route("/user/get_pfp/:filename", get(get_user_pfp))
 		.route("/user/get_user_data/:user_uuid", get(get_user_data))
 		.route("/add_friend", post(add_friend))
 		.route("/remove_friend", post(remove_friend))
 		.route("/search_user", get(search_user))
+		//ws
 		.route("/ws", get(websocket_handler))
 		.route("/get_lobby/:lobby_id", get(get_lobby))
 		.with_state(app_state)

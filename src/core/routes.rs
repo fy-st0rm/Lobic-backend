@@ -46,19 +46,22 @@ pub fn configure_routes(app_state: AppState) -> Router {
 		//music
 		.route("/music/:music_id", get(send_music))
 		.route("/image/:filename", get(get_cover_image))
+		.route("/save_music", post(save_music))
+		.route("/get_music", get(get_music))
+		.route("/search", get(search_music))
+		//recently played + trending songs
 		.route("/music/log_song_play", post(log_song_play))
 		.route("/music/get_recently_played", get(get_recently_played))
+		.route("/music/get_trending", get(get_trending_songs))
+		//liked songs
 		.route("/music/liked_song/add", post(add_to_liked_songs))
 		.route("/music/liked_song/remove", post(remove_from_liked_songs))
 		.route("/music/liked_song/get", get(get_liked_songs))
 		.route("/music/liked_song/is_song_liked", get(is_song_liked))
 		.route("/music/liked_song/toggle_like", post(toggle_liked_song))
-		.route("/save_music", post(save_music))
-		.route("/get_music", get(get_music))
-		.route("/music/get_trending", get(get_trending_songs))
+		//top tracks
 		.route("/music/get_top_tracks", get(get_top_tracks))
 		.route("/music/incr_times_played/:music_uuid", post(incr_times_played))
-		.route("/search", get(search_music))
 		//playlist stuff
 		.route("/playlist/new", post(create_playlist))
 		.route("/playlist/add_song", post(add_song_to_playlist))

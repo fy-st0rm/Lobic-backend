@@ -6,9 +6,10 @@ use axum::{
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
+use crate::config::COVER_IMG_STORAGE;
 use crate::core::app_state::AppState;
-use crate::lobic_db::models::Music;
-use crate::schema::music::dsl::*;
+
+use crate::schema::music;
 
 #[derive(Debug, Serialize)]
 pub struct TrendingSongsResponse {
@@ -24,7 +25,9 @@ pub struct TrendingSongsResponse {
 
 #[derive(Debug, Deserialize)]
 pub struct TrendingSongsQueryParams {
-	pub pagination_limit: Option<i64>,
+	#[serde(default)]
+	pub start_index: i64, //defaults to 0
+	pub page_length: Option<i64>,
 }
 
 pub async fn get_trending_songs(
@@ -42,11 +45,27 @@ pub async fn get_trending_songs(
 	};
 
 	//Fetch the most played songs with pagination
-	let limit = params.pagination_limit.unwrap_or(30); // Default to 30 if not provided
-	let result = music
-		.order(times_played.desc())
-		.limit(limit)
-		.load::<Music>(&mut db_conn);
+	let mut query = music::table
+		.select((
+			music::music_id,
+			music::artist,
+			music::title,
+			music::album,
+			music::genre,
+			music::times_played,
+		))
+		.order(music::times_played.desc())
+		.offset(params.start_index)
+		.into_boxed();
+
+	// Apply page length if specified
+	if let Some(length) = params.page_length {
+		if length > 0 {
+			query = query.limit(length);
+		}
+		//else infinity
+	}
+	let result = query.load::<(String, String, String, String, String, i32)>(&mut db_conn);
 
 	//Handle the query result
 	match result {
@@ -61,18 +80,18 @@ pub async fn get_trending_songs(
 			//Map the database entries to the response format
 			let responses: Vec<TrendingSongsResponse> = music_entries
 				.into_iter()
-				.map(|entry| {
-					let cover_art_path = format!("{}/{}.png", crate::config::COVER_IMG_STORAGE, entry.music_id);
+				.map(|(music_id, artist, title, album, genre, times_played)| {
+					let cover_art_path = format!("{}/{}.png", COVER_IMG_STORAGE, music_id);
 					let has_cover = std::fs::metadata(&cover_art_path).is_ok();
 
 					TrendingSongsResponse {
-						id: entry.music_id.clone(),
-						filename: format!("{}/{}.mp3", crate::config::MUSIC_STORAGE, entry.music_id),
-						artist: entry.artist,
-						title: entry.title,
-						album: entry.album,
-						genre: entry.genre,
-						times_played: entry.times_played,
+						id: music_id.clone(),
+						filename: format!("{}/{}.mp3", crate::config::MUSIC_STORAGE, music_id),
+						artist: artist,
+						title: title,
+						album: album,
+						genre: genre,
+						times_played: times_played,
 						cover_art_path: has_cover.then_some(cover_art_path),
 					}
 				})

@@ -9,7 +9,7 @@ use axum::{
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::{cmp::Ordering, fs};
-use strsim::jaro_winkler; // Fuzzy string matching
+use strsim::jaro_winkler;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct MusicResponse {
@@ -25,7 +25,9 @@ pub struct MusicResponse {
 #[derive(Deserialize)]
 pub struct SearchQuery {
 	search_string: String,
-	no_results_to_gen: Option<usize>,
+	#[serde(default)]
+	start_index: usize,
+	page_length: Option<usize>,
 }
 
 pub async fn search_music(State(app_state): State<AppState>, Query(params): Query<SearchQuery>) -> Response<String> {
@@ -106,11 +108,11 @@ pub async fn search_music(State(app_state): State<AppState>, Query(params): Quer
 	let mut sorted_results = search_results;
 	sorted_results.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(Ordering::Equal));
 
-	// Limit the number of results
-	let no_results = params.no_results_to_gen.unwrap_or(10);
-	let top_results = sorted_results
+	// Apply pagination
+	let paginated_results = sorted_results
 		.into_iter()
-		.take(no_results)
+		.skip(params.start_index)
+		.take(params.page_length.unwrap_or(10))
 		.map(|(entry, _)| {
 			let cover_art_path = format!("{COVER_IMG_STORAGE}/{}.png", entry.music_id);
 			let has_cover = fs::metadata(&cover_art_path).is_ok();
@@ -128,7 +130,7 @@ pub async fn search_music(State(app_state): State<AppState>, Query(params): Quer
 		.collect::<Vec<_>>();
 
 	// Return the results as JSON
-	match serde_json::to_string(&top_results) {
+	match serde_json::to_string(&paginated_results) {
 		Ok(json) => Response::builder()
 			.status(StatusCode::OK)
 			.header(header::CONTENT_TYPE, "application/json")

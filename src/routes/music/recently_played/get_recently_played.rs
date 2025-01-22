@@ -22,11 +22,15 @@ pub struct RecentlyPlayedResponse {
 	pub times_played: i32,
 	pub cover_art_path: Option<String>,
 }
-
+// /music/get_recently_played?user_id=123&start_index=10&page_length=20
+// /music/get_recently_played?user_id=123&page_length=20
+// /music/get_recently_played?user_id=123
 #[derive(Debug, Deserialize)]
 pub struct RecentlyPlayedQueryParams {
 	pub user_id: String,
-	pub pagination_limit: Option<i64>,
+	#[serde(default)]
+	pub start_index: i64, //defaults to 0
+	pub page_length: Option<i64>,
 }
 
 pub async fn get_recently_played(
@@ -44,12 +48,9 @@ pub async fn get_recently_played(
 		}
 	};
 
-	// Fetch recently played songs for the user
-	let limit = params.pagination_limit.unwrap_or(30); // Default to 30 if not provided
-	let result = play_log::table
+	let mut query = play_log::table
 		.filter(play_log::user_id.eq(&params.user_id))
 		.order(play_log::music_played_date_time.desc()) // Most recent first
-		.limit(limit) // Limit the number of results
 		.inner_join(music::table)
 		.select((
 			music::music_id,
@@ -59,7 +60,14 @@ pub async fn get_recently_played(
 			music::genre,
 			music::times_played,
 		))
-		.load::<(String, String, String, String, String, i32)>(&mut db_conn);
+		.offset(params.start_index)
+		.into_boxed();
+	if let Some(length) = params.page_length {
+		if length > 0 {
+			query = query.limit(length);
+		}
+	}
+	let result = query.load::<(String, String, String, String, String, i32)>(&mut db_conn);
 
 	// Handle the query result
 	match result {

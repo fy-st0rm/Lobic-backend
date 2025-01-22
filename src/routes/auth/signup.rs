@@ -34,18 +34,36 @@ pub async fn signup(State(app_state): State<AppState>, Json(payload): Json<Signu
 		}
 	};
 
-	// Searching if the email already exists
-	let query = users.filter(email.eq(&payload.email)).first::<User>(&mut db_conn);
+	// Searching if the username already exists
+	{
+		let query = users.filter(username.eq(&payload.username)).first::<User>(&mut db_conn);
+	
+		// Email already registered
+		if query.is_ok() {
+			return Response::builder()
+				.status(StatusCode::BAD_REQUEST)
+				.body(format!(
+					"Account with username {} has already been registered",
+					&payload.username
+				))
+				.unwrap();
+		}
+	}
 
-	// Email already registered
-	if query.is_ok() {
-		return Response::builder()
-			.status(StatusCode::BAD_REQUEST)
-			.body(format!(
-				"Account with email {} has already been registered",
-				&payload.email
-			))
-			.unwrap();
+	// Searching if the email already exists
+	{
+		let query = users.filter(email.eq(&payload.email)).first::<User>(&mut db_conn);
+
+		// Email already registered
+		if query.is_ok() {
+			return Response::builder()
+				.status(StatusCode::BAD_REQUEST)
+				.body(format!(
+					"Account with email {} has already been registered",
+					&payload.email
+				))
+				.unwrap();
+		}
 	}
 
 	// Create new user

@@ -14,9 +14,9 @@ pub struct ApiResponse {
 pub struct PlaylistInfo {
 	pub playlist_id: String,
 	pub playlist_name: String,
-	pub description: Option<String>,
 	pub creation_date_time: String,
 	pub last_updated_date_time: String,
+	pub is_playlist_combined: bool,
 }
 
 #[derive(Debug, Serialize)]
@@ -71,9 +71,9 @@ pub async fn get_users_playlists(
 					.map(|playlist| PlaylistInfo {
 						playlist_id: playlist.playlist_id,
 						playlist_name: playlist.playlist_name,
-						description: playlist.description,
 						creation_date_time: playlist.creation_date_time,
 						last_updated_date_time: playlist.last_updated_date_time,
+						is_playlist_combined: playlist.is_playlist_combined,
 					})
 					.collect();
 

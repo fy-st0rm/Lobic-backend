@@ -24,7 +24,6 @@ impl From<ChatValue> for Value {
 	}
 }
 
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Music {
 	pub id: String,
@@ -53,7 +52,6 @@ impl From<Music> for Value {
 		serde_json::to_value(&music).unwrap()
 	}
 }
-
 
 #[derive(Debug, Clone)]
 pub struct Lobby {
@@ -134,7 +132,13 @@ impl LobbyPool {
 		Ok(response)
 	}
 
-	pub fn join_lobby(&self, lobby_id: &str, client_id: &str, db_pool: &DatabasePool, user_pool: &UserPool) -> Result<Value, String> {
+	pub fn join_lobby(
+		&self,
+		lobby_id: &str,
+		client_id: &str,
+		db_pool: &DatabasePool,
+		user_pool: &UserPool,
+	) -> Result<Value, String> {
 		if !user_exists(client_id, db_pool) {
 			return Err(format!("Invalid client id: {}", client_id));
 		}
@@ -179,7 +183,13 @@ impl LobbyPool {
 		Ok(response)
 	}
 
-	pub fn leave_lobby(&self, lobby_id: &str, client_id: &str, db_pool: &DatabasePool, user_pool: &UserPool) -> Result<String, String> {
+	pub fn leave_lobby(
+		&self,
+		lobby_id: &str,
+		client_id: &str,
+		db_pool: &DatabasePool,
+		user_pool: &UserPool,
+	) -> Result<String, String> {
 		if !user_exists(client_id, db_pool) {
 			return Err(format!("Invalid client id: {}", client_id));
 		}

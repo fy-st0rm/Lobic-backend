@@ -27,9 +27,9 @@ CREATE TABLE playlists (
 	playlist_id TEXT PRIMARY KEY NOT NULL,
 	playlist_name TEXT NOT NULL,
 	user_id TEXT NOT NULL REFERENCES users(user_id),
-	description TEXT,
 	creation_date_time TEXT NOT NULL,
-	last_updated_date_time TEXT NOT NULL
+	last_updated_date_time TEXT NOT NULL,
+	is_playlist_combined BOOLEAN NOT NULL --0=solo 1=combined
 );
 
 CREATE TABLE playlist_songs (

@@ -1,15 +1,15 @@
+use crate::config::{IP, PORT};
 use crate::core::app_state::AppState;
 use crate::lobic_db::models::User;
 use crate::schema::users::dsl::*;
-use crate::config::{IP, PORT};
 
-use diesel::prelude::*;
-use serde::{Deserialize, Serialize};
 use axum::{
 	extract::{Path, State},
 	http::StatusCode,
 	response::Response,
 };
+use diesel::prelude::*;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GetLobbyResponse {
@@ -21,10 +21,7 @@ pub struct GetLobbyResponse {
 	pub artist_name: String,
 }
 
-pub async fn get_lobby(
-	State(app_state): State<AppState>,
-	Path(lobby_id): Path<String>
-) -> Response<String> {
+pub async fn get_lobby(State(app_state): State<AppState>, Path(lobby_id): Path<String>) -> Response<String> {
 	let mut db_conn = match app_state.db_pool.get() {
 		Ok(conn) => conn,
 		Err(err) => {
@@ -41,17 +38,12 @@ pub async fn get_lobby(
 		Some(lobby) => lobby,
 		None => {
 			let msg = format!("Invalid lobby id: {}", lobby_id);
-			return Response::builder()
-				.status(StatusCode::NOT_FOUND)
-				.body(msg)
-				.unwrap();
+			return Response::builder().status(StatusCode::NOT_FOUND).body(msg).unwrap();
 		}
 	};
 
 	// Getting the user data of the host
-	let user = match users
-		.filter(user_id.eq(&lobby.host_id))
-		.first::<User>(&mut db_conn) {
+	let user = match users.filter(user_id.eq(&lobby.host_id)).first::<User>(&mut db_conn) {
 		Ok(user) => user,
 		Err(err) => {
 			let msg = format!("Failed to fetch user: {err}");
@@ -73,8 +65,5 @@ pub async fn get_lobby(
 	};
 
 	let response_str = serde_json::to_string(&response).unwrap();
-	Response::builder()
-		.status(StatusCode::OK)
-		.body(response_str)
-		.unwrap()
+	Response::builder().status(StatusCode::OK).body(response_str).unwrap()
 }

@@ -41,7 +41,8 @@ pub async fn get_user_data(
 				"id": user.user_id.clone(),
 				"username": user.username,
 				"email": user.email,
-			}).to_string();
+			})
+			.to_string();
 			Response::builder().status(StatusCode::OK).body(user_data).unwrap()
 		}
 		Err(err) => Response::builder()

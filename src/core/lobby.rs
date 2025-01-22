@@ -59,8 +59,8 @@ pub struct Lobby {
 	pub host_id: String,
 	pub clients: Vec<String>,
 	pub chat: Chat,
-	// TODO: Introduce queue when implemented
 	pub music: Music,
+	pub queue: Vec<Music>,
 }
 
 #[derive(Debug, Clone)]
@@ -121,6 +121,7 @@ impl LobbyPool {
 			clients: vec![host_id.to_string()],
 			chat: Vec::new(),
 			music: Music::new(),
+			queue: Vec::new(),
 		};
 		self.insert(&lobby_id, lobby);
 
@@ -294,6 +295,19 @@ impl LobbyPool {
 			return Err(format!("User {} is not the host of lobby {}", user_id, lobby_id));
 		}
 		lobby.music = music;
+		Ok(())
+	}
+
+	pub fn set_queue(&self, lobby_id: &str, queue: Vec<Music>) -> Result<(), String> {
+		let mut inner = self.inner.lock().unwrap();
+		let lobby = match inner.get_mut(lobby_id) {
+			Some(lobby) => lobby,
+			None => {
+				return Err(format!("Invalid lobby id: {}", lobby_id));
+			}
+		};
+
+		lobby.queue = queue;
 		Ok(())
 	}
 }

@@ -33,6 +33,10 @@ pub enum OpCode {
 	#[allow(non_camel_case_types)]
 	SYNC_MUSIC,
 	#[allow(non_camel_case_types)]
+	SET_QUEUE,
+	#[allow(non_camel_case_types)]
+	SYNC_QUEUE,
+	#[allow(non_camel_case_types)]
 	ADD_FRIEND,
 	#[allow(non_camel_case_types)]
 	REMOVE_FRIEND,

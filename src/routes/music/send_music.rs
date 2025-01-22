@@ -9,8 +9,8 @@ use std::path::PathBuf;
 use tokio::{fs::File, io::BufReader};
 use tokio_util::io::ReaderStream;
 
-use crate::core::app_state::AppState;
 use crate::config::MUSIC_STORAGE;
+use crate::core::app_state::AppState;
 
 pub async fn send_music(Path(curr_music_id): Path<String>, State(_app_state): State<AppState>) -> impl IntoResponse {
 	// Validate music_id format first

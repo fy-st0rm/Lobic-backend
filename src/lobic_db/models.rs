@@ -36,9 +36,9 @@ pub struct Playlist {
 	pub playlist_id: String,
 	pub playlist_name: String,
 	pub user_id: String,
-	pub description: Option<String>,
 	pub creation_date_time: String,
 	pub last_updated_date_time: String,
+	pub is_playlist_combined: bool,
 }
 
 #[derive(Insertable, Queryable, Debug)]

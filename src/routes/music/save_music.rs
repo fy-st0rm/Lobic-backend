@@ -1,5 +1,5 @@
-use crate::core::app_state::AppState;
 use crate::config::{COVER_IMG_STORAGE, MUSIC_STORAGE};
+use crate::core::app_state::AppState;
 use crate::lobic_db::models::Music;
 use crate::schema::music::dsl::*;
 

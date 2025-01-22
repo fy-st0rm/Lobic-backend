@@ -26,6 +26,9 @@ pub struct MusicResponse {
 pub struct MusicQuery {
 	title: Option<String>,
 	uuid: Option<String>,
+	#[serde(default)]
+	start_index: i64,
+	page_length: Option<i64>,
 }
 
 pub async fn get_music(State(app_state): State<AppState>, Query(params): Query<MusicQuery>) -> Response<String> {
@@ -62,6 +65,12 @@ pub async fn get_music(State(app_state): State<AppState>, Query(params): Query<M
 				.body("Please provide either title or uuid, not both".to_string())
 				.unwrap();
 		}
+	}
+
+	// Add pagination
+	query = query.offset(params.start_index);
+	if let Some(length) = params.page_length {
+		query = query.limit(length);
 	}
 
 	// Step 3: Execute the query and handle the results

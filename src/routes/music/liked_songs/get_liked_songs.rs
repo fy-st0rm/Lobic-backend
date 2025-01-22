@@ -23,10 +23,15 @@ pub struct LikedSongsResponse {
 	pub cover_art_path: Option<String>,
 }
 
+// /music/liked_song/get?user_id=123&start_index=10&page_length=20
+// /music/liked_song/get?user_id=123&page_length=20
+// /music/liked_song/get?user_id=123
 #[derive(Debug, Deserialize)]
 pub struct LikedSongsQueryParams {
 	pub user_id: String,
-	pub pagination_limit: Option<i64>,
+	#[serde(default)]
+	pub start_index: i64, //defaults to 0
+	pub page_length: Option<i64>,
 }
 
 pub async fn get_liked_songs(
@@ -57,11 +62,15 @@ pub async fn get_liked_songs(
 			music::genre,
 			music::times_played,
 		))
+		.offset(params.start_index)
 		.into_boxed();
 
-	// Apply pagination if specified
-	if let Some(limit) = params.pagination_limit {
-		query = query.limit(limit);
+	// Apply page length if specified
+	if let Some(length) = params.page_length {
+		if length > 0 {
+			query = query.limit(length);
+		}
+		//else infinity
 	}
 
 	// Execute the query
@@ -77,7 +86,7 @@ pub async fn get_liked_songs(
 					.unwrap();
 			}
 
-			//  Map the database entries to the response format
+			// Map the database entries to the response format
 			let responses: Vec<LikedSongsResponse> = music_entries
 				.into_iter()
 				.map(|(music_id, artist, title, album, genre, times_played)| {

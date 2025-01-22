@@ -81,6 +81,8 @@ pub async fn handle_socket(socket: WebSocket, State(app_state): State<AppState>)
 					OpCode::GET_MESSAGES => handle_get_messages(payload.value, &lobby_pool),
 					OpCode::SET_MUSIC_STATE => handle_set_music_state(payload.value, &lobby_pool, &user_pool),
 					OpCode::SYNC_MUSIC => handle_sync_music(payload.value, &lobby_pool),
+					OpCode::SET_QUEUE => handle_set_queue(payload.value, &lobby_pool, &user_pool),
+					OpCode::SYNC_QUEUE => handle_sync_queue(payload.value, &lobby_pool),
 					_ => Err(format!("Invalid opcode: {:?}", payload.op_code)),
 				};
 
@@ -391,7 +393,6 @@ fn handle_set_music_state(value: Value, lobby_pool: &LobbyPool, user_pool: &User
 
 	lobby_pool.set_music_state(&payload.lobby_id, &payload.user_id, music)?;
 
-	// NOTE: We donot notify the host if we sucessfully set the state or not
 	let lobby = lobby_pool.get(&payload.lobby_id).unwrap();
 	let music = lobby.music;
 
@@ -453,6 +454,77 @@ fn handle_sync_music(value: Value, lobby_pool: &LobbyPool) -> Result<SocketRespo
 		op_code: OpCode::SYNC_MUSIC,
 		r#for: OpCode::SYNC_MUSIC,
 		value: music.into(),
+	};
+
+	Ok(response)
+}
+
+// :set_queue
+#[derive(Serialize, Deserialize)]
+struct SetQueuePayload {
+	pub lobby_id: String,
+	pub queue: Vec<Music>,
+}
+
+fn handle_set_queue(value: Value, lobby_pool: &LobbyPool, user_pool: &UserPool) -> Result<SocketResponse, String> {
+	let payload: SetQueuePayload = serde_json::from_value(value).map_err(|x| x.to_string())?;
+
+	lobby_pool.set_queue(&payload.lobby_id, payload.queue)?;
+
+	let lobby = lobby_pool.get(&payload.lobby_id).unwrap();
+	let queue = lobby.queue;
+
+	// Sending the sync request to every client in lobby
+	for client_id in lobby.clients {
+		if client_id == lobby.host_id {
+			continue;
+		}
+
+		let response = SocketResponse {
+			op_code: OpCode::OK,
+			r#for: OpCode::SYNC_QUEUE,
+			value: queue.clone().into(),
+		}.to_string();
+
+		let client_conn = match user_pool.get(&client_id) {
+			Some(conn) => conn,
+			None => {
+				return Err(format!(
+					"Cannot find user {} in a lobby {} (in \"handle_set_music_state\" this shouldnt occure)",
+					client_id, payload.lobby_id
+				));
+			}
+		};
+		let _ = client_conn.send(Message::Text(response));
+	}
+
+	let response = SocketResponse {
+		op_code: OpCode::OK,
+		r#for: OpCode::SET_QUEUE,
+		value: "Sucessfully set queue".into(),
+	};
+
+	Ok(response)
+}
+
+// :sync_queue
+#[derive(Serialize, Deserialize)]
+struct SyncQueuePayload {
+	pub lobby_id: String,
+}
+
+fn handle_sync_queue(value: Value, lobby_pool: &LobbyPool) -> Result<SocketResponse, String> {
+	let payload: SyncQueuePayload = serde_json::from_value(value).map_err(|x| x.to_string())?;
+
+	let lobby = match lobby_pool.get(&payload.lobby_id) {
+		Some(lobby) => lobby,
+		None => return Err(format!("Invalid lobby id: {}", payload.lobby_id)),
+	};
+
+	let response = SocketResponse {
+		op_code: OpCode::OK,
+		r#for: OpCode::SYNC_MUSIC,
+		value: lobby.queue.into(),
 	};
 
 	Ok(response)

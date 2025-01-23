@@ -1,4 +1,4 @@
-use crate::config::{MusicState, OpCode};
+use crate::config::{MusicState, OpCode, SocketResponse, SocketPayload};
 use crate::core::{
 	app_state::AppState,
 	lobby::{LobbyPool, Music},
@@ -16,27 +16,6 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use tokio::sync::broadcast;
 
-
-// Request structure
-#[derive(Debug, Serialize, Deserialize)]
-struct SocketPayload {
-	pub op_code: OpCode,
-	pub value: Value,
-}
-
-// Response structure
-#[derive(Debug, Serialize, Deserialize)]
-struct SocketResponse {
-	pub op_code: OpCode,
-	pub r#for: OpCode,
-	pub value: Value,
-}
-
-impl SocketResponse {
-	pub fn to_string(&self) -> String {
-		serde_json::to_string(self).unwrap()
-	}
-}
 
 // :socket
 pub async fn websocket_handler(ws: WebSocketUpgrade, State(app_state): State<AppState>) -> impl IntoResponse {

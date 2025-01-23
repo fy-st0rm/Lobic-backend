@@ -47,7 +47,7 @@ pub fn configure_routes(app_state: AppState) -> Router {
 		.route("/music/:music_id", get(send_music))
 		.route("/image/:filename", get(get_cover_image))
 		.route("/save_music", post(save_music))
-		.route("/get_music", get(get_music))
+		.route("/music/get_music", get(get_music))
 		.route("/search", get(search_music))
 		//recently played + trending songs
 		.route("/music/log_song_play", post(log_song_play))

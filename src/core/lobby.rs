@@ -1,4 +1,4 @@
-use crate::config::{MusicState, OpCode};
+use crate::config::{MusicState, OpCode, SocketResponse};
 use crate::core::user_pool::UserPool;
 use crate::lobic_db::db::*;
 use crate::utils::timestamp;
@@ -163,12 +163,11 @@ impl LobbyPool {
 		// Broadcasting to the members of the lobby that someone has left
 		for client in &lobby.clients {
 			if let Some(conn) = user_pool.get(&client) {
-				let response = json!({
-					"op_code": OpCode::OK,
-					"for": OpCode::GET_LOBBY_MEMBERS,
-					"value": lobby.clients.clone(),
-				})
-				.to_string();
+				let response = SocketResponse {
+					op_code: OpCode::OK,
+					r#for: OpCode::GET_LOBBY_MEMBERS,
+					value: lobby.clients.clone().into(),
+				}.to_string();
 				let _ = conn.send(Message::Text(response));
 			}
 		}
@@ -209,12 +208,11 @@ impl LobbyPool {
 		// Broadcasting to the members of the lobby that someone has left
 		for client in &lobby.clients {
 			if let Some(conn) = user_pool.get(&client) {
-				let response = json!({
-					"op_code": OpCode::OK,
-					"for": OpCode::GET_LOBBY_MEMBERS,
-					"value": lobby.clients.clone(),
-				})
-				.to_string();
+				let response = SocketResponse {
+					op_code: OpCode::OK,
+					r#for: OpCode::GET_LOBBY_MEMBERS,
+					value: lobby.clients.clone().into(),
+				}.to_string();
 				let _ = conn.send(Message::Text(response));
 			}
 		}
@@ -234,12 +232,11 @@ impl LobbyPool {
 		// Notifying all the clients in the lobby to leave
 		for client in lobby.clients {
 			if let Some(conn) = user_pool.get(&client) {
-				let response = json!({
-					"op_code": OpCode::OK,
-					"for": OpCode::LEAVE_LOBBY,
-					"value": "Host disconnected"
-				})
-				.to_string();
+				let response = SocketResponse {
+					op_code: OpCode::OK,
+					r#for: OpCode::LEAVE_LOBBY,
+					value: "Host disconnected".into()
+				}.to_string();
 				let _ = conn.send(Message::Text(response));
 			}
 		}

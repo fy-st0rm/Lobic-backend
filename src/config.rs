@@ -1,5 +1,6 @@
 use axum::http::{request::Parts, HeaderValue};
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 pub const IP: &str = "127.0.0.1";
 pub const PORT: &str = "8080";
@@ -40,6 +41,7 @@ pub enum OpCode {
 	ADD_FRIEND,
 	#[allow(non_camel_case_types)]
 	REMOVE_FRIEND,
+	NOTIFICATION,
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
@@ -66,3 +68,29 @@ pub fn allowed_origins(origin: &HeaderValue, _request: &Parts) -> bool {
 	];
 	origins.iter().any(|&allowed| origin == allowed)
 }
+
+
+// Structure for WebSocket
+
+// Request structure
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SocketPayload {
+	pub op_code: OpCode,
+	pub value: Value,
+}
+
+// Response structure
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SocketResponse {
+	pub op_code: OpCode,
+	pub r#for: OpCode,
+	pub value: Value,
+}
+
+impl SocketResponse {
+	pub fn to_string(&self) -> String {
+		serde_json::to_string(self).unwrap()
+	}
+}
+
+

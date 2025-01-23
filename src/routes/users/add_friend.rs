@@ -1,5 +1,6 @@
 use crate::config::OpCode;
 use crate::core::app_state::AppState;
+use crate::core::notify::{notify, Notification};
 use crate::lobic_db::db::*;
 use crate::lobic_db::models::UserFriendship;
 use crate::schema::user_friendship::dsl::*;
@@ -80,21 +81,12 @@ pub async fn add_friend(State(app_state): State<AppState>, Json(payload): Json<A
 		.unwrap();
 
 	// Send notification to the friend
-	let conn = match app_state.user_pool.get(&payload.friend_id) {
-		Some(conn) => conn,
-		None => {
-			let msg = format!("Looks like user {} hasnt registered to websocket.", payload.friend_id);
-			return Response::builder().status(StatusCode::BAD_REQUEST).body(msg).unwrap();
-		}
+	let notif = Notification {
+		op_code: OpCode::ADD_FRIEND,
+		value: payload.user_id.into(),
 	};
 
-	let response = json!({
-		"op_code": OpCode::OK,
-		"for": OpCode::ADD_FRIEND,
-		"value": payload.user_id
-	})
-	.to_string();
-	let _ = conn.send(Message::Text(response));
+	notify(&payload.friend_id, notif, &app_state.user_pool);
 
 	// Finish
 	Response::builder()

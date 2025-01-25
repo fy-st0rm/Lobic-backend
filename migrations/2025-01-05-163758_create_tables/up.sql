@@ -61,5 +61,13 @@ CREATE TABLE liked_songs(
 	user_id TEXT NOT NULL REFERENCES users(user_id),
 	music_id TEXT NOT NULL REFERENCES music(music_id),
 	song_added_date_time TEXT NOT NULL,
-	PRIMARY KEY (user_id, music_id)	
-)
+	PRIMARY KEY (user_id, music_id)
+);
+
+-- notification
+CREATE TABLE notifications(
+	id TEXT PRIMARY KEY NOT NULL,
+	user_id TEXT NOT NULL REFERENCES users(user_id),
+	op_code TEXT NOT NULL,
+	value TEXT NOT NULL
+);

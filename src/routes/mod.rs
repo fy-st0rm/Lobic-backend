@@ -51,3 +51,4 @@ pub mod auth {
 }
 pub mod get_lobby;
 pub mod socket;
+pub mod notify;

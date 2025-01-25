@@ -1,7 +1,10 @@
-// models.rs
+use crate::config::OpCode;
 use crate::schema::*;
+
 use diesel::{prelude::Insertable, Queryable, Selectable};
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
+use uuid::Uuid;
 
 #[derive(Insertable, Queryable, Debug, Serialize, Deserialize, Selectable)]
 #[diesel(table_name = users)]
@@ -73,3 +76,46 @@ pub struct LikedSongs {
 	pub music_id: String,
 	pub song_added_date_time: String,
 }
+
+#[derive(Insertable, Queryable, Debug, Serialize, Deserialize, Clone)]
+#[diesel(table_name = notifications)]
+pub struct NotifModel {
+	pub id: String,
+	pub user_id: String,
+	pub op_code: String,
+	pub value: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Notification {
+	pub id: String,
+	pub op_code: OpCode,
+	pub value: Value,
+}
+
+impl Notification {
+	pub fn new(op_code: OpCode, value: Value) -> Self {
+		let id = Uuid::new_v4().to_string();
+		Notification {
+			id: id,
+			op_code: op_code,
+			value: value,
+		}
+	}
+
+	pub fn to_model(&self, user_id: &str) -> NotifModel {
+		NotifModel {
+			id: self.id.clone(),
+			user_id: user_id.to_string(),
+			op_code: serde_json::to_string(&self.op_code).unwrap(),
+			value: serde_json::to_string(&self.value).unwrap(),
+		}
+	}
+}
+
+impl From<Notification> for Value {
+	fn from(notif: Notification) -> Self {
+		serde_json::to_value(&notif).unwrap()
+	}
+}
+

@@ -26,6 +26,7 @@ pub mod music {
 pub mod playlist {
 	pub mod add_song_to_playlist;
 	pub mod create_new_playlist;
+	pub mod delete_playlist;
 	pub mod get_playlist_cover_img;
 	pub mod get_playlist_music;
 	pub mod get_users_playlists;

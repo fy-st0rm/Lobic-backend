@@ -19,9 +19,9 @@ use crate::{
 		},
 		playlist::{
 			add_song_to_playlist::add_song_to_playlist, create_new_playlist::create_playlist,
-			get_playlist_cover_img::get_playlist_cover_img, get_playlist_music::get_playlist_music,
-			get_users_playlists::get_users_playlists, remove_song_from_playlist::remove_song_from_playlist,
-			update_playlist_cover_img::update_playlist_cover_img,
+			delete_playlist::delete_playlist, get_playlist_cover_img::get_playlist_cover_img,
+			get_playlist_music::get_playlist_music, get_users_playlists::get_users_playlists,
+			remove_song_from_playlist::remove_song_from_playlist, update_playlist_cover_img::update_playlist_cover_img,
 		},
 		socket::websocket_handler,
 		users::{
@@ -34,7 +34,6 @@ use axum::{
 	routing::{get, post},
 	Router,
 };
-use diesel::dsl::delete;
 
 pub fn configure_routes(app_state: AppState) -> Router {
 	Router::new()
@@ -72,6 +71,7 @@ pub fn configure_routes(app_state: AppState) -> Router {
 		.route("/playlist/update_cover_img", post(update_playlist_cover_img))
 		.route("/playlist/cover_img/:playlist_id", get(get_playlist_cover_img))
 		.route("/playlist/remove_song_from_playlist", post(remove_song_from_playlist))
+		.route("/playlist/delete/:curr_playlist_id", post(delete_playlist))
 		//user stuff
 		.route("/user/update_pfp", post(update_pfp))
 		.route("/user/get_pfp/:filename", get(get_user_pfp))

@@ -29,6 +29,7 @@ pub mod playlist {
 	pub mod get_playlist_cover_img;
 	pub mod get_playlist_music;
 	pub mod get_users_playlists;
+	pub mod remove_song_from_playlist;
 	pub mod update_playlist_cover_img;
 }
 pub mod users {

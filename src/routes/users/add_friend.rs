@@ -5,12 +5,7 @@ use crate::lobic_db::db::*;
 use crate::lobic_db::models::UserFriendship;
 use crate::schema::user_friendship::dsl::*;
 
-use axum::{
-	extract::State,
-	http::status::StatusCode,
-	response::Response,
-	Json,
-};
+use axum::{extract::State, http::status::StatusCode, response::Response, Json};
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 

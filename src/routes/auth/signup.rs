@@ -37,7 +37,7 @@ pub async fn signup(State(app_state): State<AppState>, Json(payload): Json<Signu
 	// Searching if the username already exists
 	{
 		let query = users.filter(username.eq(&payload.username)).first::<User>(&mut db_conn);
-	
+
 		// Email already registered
 		if query.is_ok() {
 			return Response::builder()

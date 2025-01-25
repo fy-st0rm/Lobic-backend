@@ -30,12 +30,16 @@ impl From<Notification> for Value {
 	}
 }
 
-
 pub fn notify(user_id: &str, notif: Notification, user_pool: &UserPool) {
 	let conn = match user_pool.get(user_id) {
 		Some(conn) => conn,
 		None => {
-			println!("ERROR {}:{}: Looks like user {} hasnt registered to websocket.", file!(), line!(), user_id);
+			println!(
+				"ERROR {}:{}: Looks like user {} hasnt registered to websocket.",
+				file!(),
+				line!(),
+				user_id
+			);
 			return;
 		}
 	};
@@ -43,7 +47,8 @@ pub fn notify(user_id: &str, notif: Notification, user_pool: &UserPool) {
 	let response = SocketResponse {
 		op_code: OpCode::NOTIFICATION,
 		r#for: OpCode::NOTIFICATION,
-		value: notif.into()
-	}.to_string();
+		value: notif.into(),
+	}
+	.to_string();
 	let _ = conn.send(Message::Text(response));
 }

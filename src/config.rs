@@ -69,7 +69,6 @@ pub fn allowed_origins(origin: &HeaderValue, _request: &Parts) -> bool {
 	origins.iter().any(|&allowed| origin == allowed)
 }
 
-
 // Structure for WebSocket
 
 // Request structure
@@ -92,5 +91,3 @@ impl SocketResponse {
 		serde_json::to_string(self).unwrap()
 	}
 }
-
-

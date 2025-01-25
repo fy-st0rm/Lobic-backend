@@ -167,7 +167,8 @@ impl LobbyPool {
 					op_code: OpCode::OK,
 					r#for: OpCode::GET_LOBBY_MEMBERS,
 					value: lobby.clients.clone().into(),
-				}.to_string();
+				}
+				.to_string();
 				let _ = conn.send(Message::Text(response));
 			}
 		}
@@ -212,7 +213,8 @@ impl LobbyPool {
 					op_code: OpCode::OK,
 					r#for: OpCode::GET_LOBBY_MEMBERS,
 					value: lobby.clients.clone().into(),
-				}.to_string();
+				}
+				.to_string();
 				let _ = conn.send(Message::Text(response));
 			}
 		}
@@ -235,8 +237,9 @@ impl LobbyPool {
 				let response = SocketResponse {
 					op_code: OpCode::OK,
 					r#for: OpCode::LEAVE_LOBBY,
-					value: "Host disconnected".into()
-				}.to_string();
+					value: "Host disconnected".into(),
+				}
+				.to_string();
 				let _ = conn.send(Message::Text(response));
 			}
 		}

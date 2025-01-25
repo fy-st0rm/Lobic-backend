@@ -28,6 +28,10 @@ use crate::{
 			add_friend::add_friend, get_user::get_user, get_user_data::get_user_data, get_user_pfp::get_user_pfp,
 			remove_friend::remove_friend, search_user::search_user, update_pfp::update_pfp,
 		},
+		notify::{
+			get_all_notif,
+			remove_notif,
+		},
 	},
 };
 use axum::{
@@ -78,7 +82,10 @@ pub fn configure_routes(app_state: AppState) -> Router {
 		.route("/user/get_user_data/:user_uuid", get(get_user_data))
 		.route("/add_friend", post(add_friend))
 		.route("/remove_friend", post(remove_friend))
-		.route("/search_user", get(search_user))
+		.route("/user/search", get(search_user))
+		//notification
+		.route("/notif/get/:client_id", get(get_all_notif))
+		.route("/notif/delete/:notif_id", post(remove_notif))
 		//ws
 		.route("/ws", get(websocket_handler))
 		.route("/get_lobby/:lobby_id", get(get_lobby))

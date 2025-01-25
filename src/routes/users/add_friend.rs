@@ -1,8 +1,8 @@
 use crate::config::OpCode;
 use crate::core::app_state::AppState;
-use crate::core::notify::{notify, Notification};
+use crate::routes::notify::notify;
 use crate::lobic_db::db::*;
-use crate::lobic_db::models::UserFriendship;
+use crate::lobic_db::models::{UserFriendship, Notification};
 use crate::schema::user_friendship::dsl::*;
 
 use axum::{extract::State, http::status::StatusCode, response::Response, Json};
@@ -103,7 +103,7 @@ pub async fn add_friend(State(app_state): State<AppState>, Json(payload): Json<A
 		if !is_friend {
 			// Send notification to the friend
 			let notif = Notification::new(OpCode::ADD_FRIEND, payload.user_id.into());
-			notify(&payload.friend_id, notif, &app_state.user_pool);
+			notify(&payload.friend_id, notif, &app_state.db_pool, &app_state.user_pool);
 		}
 	}
 

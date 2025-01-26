@@ -17,6 +17,7 @@ use crate::{
 			top_tracks::get_top_tracks::get_top_tracks,
 			trending::{get_trending_songs::get_trending_songs, increment_times_played::incr_times_played},
 		},
+		notify::{get_all_notif, remove_notif},
 		playlist::{
 			add_song_to_playlist::add_song_to_playlist, create_new_playlist::create_playlist,
 			delete_playlist::delete_playlist, get_playlist_cover_img::get_playlist_cover_img,
@@ -27,10 +28,6 @@ use crate::{
 		users::{
 			add_friend::add_friend, get_user::get_user, get_user_data::get_user_data, get_user_pfp::get_user_pfp,
 			remove_friend::remove_friend, search_user::search_user, update_pfp::update_pfp,
-		},
-		notify::{
-			get_all_notif,
-			remove_notif,
 		},
 	},
 };
@@ -50,14 +47,16 @@ pub fn configure_routes(app_state: AppState) -> Router {
 		.route("/verify", get(verify))
 		//music
 		.route("/music/:music_id", get(send_music))
-		.route("/image/:filename", get(get_cover_image))
-		.route("/save_music", post(save_music))
-		.route("/music/get_music", get(get_music))
+		.route("/image/:id", get(get_cover_image))
+		.route("/save_music", post(save_music)) // @TODO :add support for non mp3 and musci with missing tags
+		.route("/music/get_music", get(get_music)) //^^^^^^^^^
 		.route("/search", get(search_music))
+		// @TODO :get a list of artists and album
 		//recently played + trending songs
 		.route("/music/log_song_play", post(log_song_play))
 		.route("/music/get_recently_played", get(get_recently_played))
 		.route("/music/get_trending", get(get_trending_songs))
+		// @TODO :combined playlist --add partner, remove partner?,fetch partners
 		//liked songs
 		.route("/music/liked_song/add", post(add_to_liked_songs))
 		.route("/music/liked_song/remove", post(remove_from_liked_songs))
@@ -77,8 +76,8 @@ pub fn configure_routes(app_state: AppState) -> Router {
 		.route("/playlist/remove_song_from_playlist", post(remove_song_from_playlist))
 		.route("/playlist/delete/:curr_playlist_id", post(delete_playlist))
 		//user stuff
-		.route("/user/update_pfp", post(update_pfp))
-		.route("/user/get_pfp/:filename", get(get_user_pfp))
+		.route("/user/update_pfp", post(update_pfp)) // @TODO :support non png image
+		.route("/user/get_pfp/:filename", get(get_user_pfp)) // @TODO : support non png
 		.route("/user/get_user_data/:user_uuid", get(get_user_data))
 		.route("/add_friend", post(add_friend))
 		.route("/remove_friend", post(remove_friend))

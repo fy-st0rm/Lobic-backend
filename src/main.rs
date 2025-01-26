@@ -1,7 +1,15 @@
 /*
- * TODO:
- * [ ] Implement auto deletion when host disconnects
+* TODO:
+* [ ] Implement auto deletion when host disconnects
 */
+
+use std::fs;
+use std::path::Path;
+
+pub const COVER_IMG_STORAGE: &str = "./storage/cover_images";
+pub const MUSIC_STORAGE: &str = "./storage/music_db";
+pub const USER_PFP_STORAGE: &str = "./storage/users_pfps";
+pub const PLAYLIST_COVER_IMG_STORAGE: &str = "./storage/playlists_cover_img";
 
 mod config;
 mod core;
@@ -13,14 +21,10 @@ mod utils;
 use config::{IP, PORT};
 use core::{app_state::AppState, migrations::run_migrations};
 use dotenv::dotenv;
-use std::fs;
 
 #[tokio::main]
 async fn main() {
-	// Ensure the storage directory exists
-	if !fs::metadata("storage/").is_ok() {
-		fs::create_dir("storage/").expect("Failed to create storage directory");
-	}
+	create_storage_directories().expect("Failed to create storage directories");
 
 	dotenv().ok();
 	tracing_subscriber::fmt().pretty().init();
@@ -28,14 +32,34 @@ async fn main() {
 	let db_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set in .env file");
 	run_migrations(&db_url);
 
-	// Creating the global state
 	let app_state = AppState::new();
 
-	// Configure routes
 	let app = core::routes::configure_routes(app_state)
 		.layer(axum::middleware::from_fn(core::server::logger))
 		.layer(core::server::configure_cors());
 
-	// Start the server
 	core::server::start_server(app, &IP, &PORT).await;
+}
+
+fn create_storage_directories() -> std::io::Result<()> {
+	// Create the base storage directory if it doesn't exist
+	if !Path::new("storage/").exists() {
+		fs::create_dir("storage/")?;
+	}
+
+	// Create subdirectories
+	let subdirectories = [
+		COVER_IMG_STORAGE,
+		MUSIC_STORAGE,
+		USER_PFP_STORAGE,
+		PLAYLIST_COVER_IMG_STORAGE,
+	];
+
+	for dir in subdirectories {
+		if !Path::new(dir).exists() {
+			fs::create_dir_all(dir)?;
+		}
+	}
+
+	Ok(())
 }

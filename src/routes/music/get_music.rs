@@ -26,13 +26,14 @@ pub struct MusicResponse {
 pub struct MusicQuery {
 	title: Option<String>,
 	uuid: Option<String>,
+	artist: Option<String>,
+	album: Option<String>,
 	#[serde(default)]
 	start_index: i64,
 	page_length: Option<i64>,
 }
 
 pub async fn get_music(State(app_state): State<AppState>, Query(params): Query<MusicQuery>) -> Response<String> {
-	// Step 1: Get a database connection
 	let mut db_conn = match app_state.db_pool.get() {
 		Ok(conn) => conn,
 		Err(err) => {
@@ -48,32 +49,24 @@ pub async fn get_music(State(app_state): State<AppState>, Query(params): Query<M
 
 	let mut query = music.into_boxed();
 
-	// Step 2: Build query based on provided parameters
-	match (params.title, params.uuid) {
-		(Some(title_val), None) => {
-			query = query.filter(title.eq(title_val));
-		}
-		(None, Some(uuid_val)) => {
-			query = query.filter(music_id.eq(uuid_val));
-		}
-		(None, None) => {
-			// No parameters - return all music
-		}
-		(Some(_), Some(_)) => {
-			return Response::builder()
-				.status(StatusCode::BAD_REQUEST)
-				.body("Please provide either title or uuid, not both".to_string())
-				.unwrap();
-		}
+	if let Some(title_val) = params.title {
+		query = query.filter(title.eq(title_val));
+	}
+	if let Some(uuid_val) = params.uuid {
+		query = query.filter(music_id.eq(uuid_val));
+	}
+	if let Some(artist_val) = params.artist {
+		query = query.filter(artist.eq(artist_val));
+	}
+	if let Some(album_val) = params.album {
+		query = query.filter(album.eq(album_val));
 	}
 
-	// Add pagination
 	query = query.offset(params.start_index);
 	if let Some(length) = params.page_length {
 		query = query.limit(length);
 	}
 
-	// Step 3: Execute the query and handle the results
 	let result = query.load::<Music>(&mut db_conn);
 
 	match result {
@@ -85,7 +78,6 @@ pub async fn get_music(State(app_state): State<AppState>, Query(params): Query<M
 					.unwrap();
 			}
 
-			// Step 4: Map the database entries to the response format
 			let responses: Vec<MusicResponse> = music_entries
 				.into_iter()
 				.map(|entry| {
@@ -105,7 +97,6 @@ pub async fn get_music(State(app_state): State<AppState>, Query(params): Query<M
 				})
 				.collect();
 
-			// Step 5: Serialize the response and return it
 			match serde_json::to_string(&responses) {
 				Ok(json) => Response::builder()
 					.status(StatusCode::OK)

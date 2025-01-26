@@ -47,7 +47,7 @@ pub fn configure_routes(app_state: AppState) -> Router {
 		.route("/verify", get(verify))
 		//music
 		.route("/music/:music_id", get(send_music)) // @TODO :browse by artist and album
-		.route("/image/:artist/:album", get(get_cover_image)) // @TODO :send a default image if failure
+		.route("/image/:id", get(get_cover_image)) // @TODO :send a default image if failure
 		.route("/save_music", post(save_music)) // @TODO :add support for non mp3 and musci with missing tags
 		.route("/music/get_music", get(get_music)) //^^^^^^^^^
 		.route("/search", get(search_music))

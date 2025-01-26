@@ -6,10 +6,23 @@ use axum::{
 	http::{header, StatusCode},
 	response::{IntoResponse, Response},
 };
-use std::path::PathBuf;
-use tokio::{fs::File, io::AsyncReadExt};
+use std::{collections::hash_map::DefaultHasher, hash::Hasher};
 
-pub async fn get_cover_image(Path(filename): Path<String>) -> impl IntoResponse {
+use std::{hash::Hash, path::PathBuf};
+use tokio::{fs::File, io::AsyncReadExt};
+use uuid::Uuid;
+
+pub async fn get_cover_image(Path((artist, album)): Path<(String, String)>) -> impl IntoResponse {
+	// Generate a UUID-based filename using the hashing logic
+	let mut hasher = DefaultHasher::new();
+	artist.hash(&mut hasher);
+	album.hash(&mut hasher);
+	let hash = hasher.finish();
+	let img_uuid = Uuid::from_u64_pair(hash, hash);
+
+	// Construct the filename using the UUID
+	let filename = format!("{}.png", img_uuid);
+
 	// Construct the path to the cover image
 	let mut path = PathBuf::from(COVER_IMG_STORAGE);
 	path.push(&filename);

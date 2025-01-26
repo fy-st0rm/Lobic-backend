@@ -16,9 +16,8 @@ use uuid::Uuid;
 use walkdir::WalkDir;
 
 #[derive(Debug, Serialize, Deserialize)]
-// a correct name would be MusicOrFolderPath but ehh
 pub struct MusicPath {
-	pub path: String, //     "path" : "/home/rain/Lobic/music/Sunsetz.mp3"
+	pub path: String,
 }
 
 pub async fn save_music(State(app_state): State<AppState>, Json(payload): Json<MusicPath>) -> Response<String> {
@@ -139,23 +138,31 @@ fn process_music_file(path: &Path, db_conn: &mut SqliteConnection) -> Result<(),
 		times_played: 0,
 	};
 
-	extract_cover_art(path_str, &curr_music_id)?;
+	extract_cover_art(path_str, &curr_artist, &curr_album)?;
 
 	diesel::insert_into(music).values(&curr_music).execute(db_conn)?;
 
 	Ok(())
 }
 
-fn extract_cover_art(mp3_path: &str, uuid: &Uuid) -> Result<(), Box<dyn std::error::Error>> {
+fn extract_cover_art(mp3_path: &str, curr_artist: &str, curr_album: &str) -> Result<(), Box<dyn std::error::Error>> {
 	let tag = Tag::read_from_path(mp3_path)?;
 	let pictures: Vec<_> = tag.pictures().collect();
 
 	if let Some(picture) = pictures.iter().find(|pic| pic.picture_type == PictureType::CoverFront) {
 		// Create platform-independent path for cover_images directory
+
+		//create a uuid from artist and album name to store image
+		let mut hasher = DefaultHasher::new();
+		curr_artist.hash(&mut hasher);
+		curr_album.hash(&mut hasher);
+		let hash = hasher.finish();
+		let img_uuid = Uuid::from_u64_pair(hash, hash);
+
 		let cover_dir = PathBuf::from(COVER_IMG_STORAGE);
 		fs::create_dir_all(&cover_dir)?;
 
-		let output_path = cover_dir.join(format!("{}.png", uuid));
+		let output_path = cover_dir.join(format!("{}.png", img_uuid));
 		let mut file = fs::File::create(&output_path)?;
 		file.write_all(&picture.data)?;
 

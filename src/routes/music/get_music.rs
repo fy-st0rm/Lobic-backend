@@ -28,6 +28,7 @@ pub struct MusicQuery {
 	uuid: Option<String>,
 	artist: Option<String>,
 	album: Option<String>,
+	genere: Option<String>,
 	#[serde(default)]
 	start_index: i64,
 	page_length: Option<i64>,
@@ -60,6 +61,9 @@ pub async fn get_music(State(app_state): State<AppState>, Query(params): Query<M
 	}
 	if let Some(album_val) = params.album {
 		query = query.filter(album.eq(album_val));
+	}
+	if let Some(genre_val) = params.genere {
+		query = query.filter(title.eq(genre_val));
 	}
 
 	query = query.offset(params.start_index);

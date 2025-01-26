@@ -1,4 +1,5 @@
 pub mod music {
+	pub mod browse_all;
 	pub mod get_cover_image;
 	pub mod get_music;
 	pub mod save_music;
@@ -50,5 +51,5 @@ pub mod auth {
 	pub mod verify;
 }
 pub mod get_lobby;
-pub mod socket;
 pub mod notify;
+pub mod socket;

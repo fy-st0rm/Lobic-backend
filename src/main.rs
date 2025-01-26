@@ -6,11 +6,6 @@
 use std::fs;
 use std::path::Path;
 
-pub const COVER_IMG_STORAGE: &str = "./storage/cover_images";
-pub const MUSIC_STORAGE: &str = "./storage/music_db";
-pub const USER_PFP_STORAGE: &str = "./storage/users_pfps";
-pub const PLAYLIST_COVER_IMG_STORAGE: &str = "./storage/playlists_cover_img";
-
 mod config;
 mod core;
 mod lobic_db;
@@ -18,7 +13,7 @@ mod routes;
 mod schema;
 mod utils;
 
-use config::{IP, PORT};
+use config::{COVER_IMG_STORAGE, IP, MUSIC_STORAGE, PLAYLIST_COVER_IMG_STORAGE, PORT, USER_PFP_STORAGE};
 use core::{app_state::AppState, migrations::run_migrations};
 use dotenv::dotenv;
 

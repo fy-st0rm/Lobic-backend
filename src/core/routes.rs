@@ -4,6 +4,7 @@ use crate::{
 		auth::{login::login, logout::logout, signup::signup, verify::verify},
 		get_lobby::get_lobby,
 		music::{
+			browse_all::browse_all,
 			get_cover_image::get_cover_image,
 			get_music::get_music,
 			liked_songs::{
@@ -51,7 +52,7 @@ pub fn configure_routes(app_state: AppState) -> Router {
 		.route("/save_music", post(save_music)) // @TODO :add support for non mp3 and musci with missing tags
 		.route("/music/get_music", get(get_music)) //^^^^^^^^^
 		.route("/search", get(search_music))
-		// @TODO :get a list of artists and album
+		.route("/music/browse_all/:category", get(browse_all))
 		//recently played + trending songs
 		.route("/music/log_song_play", post(log_song_play))
 		.route("/music/get_recently_played", get(get_recently_played))

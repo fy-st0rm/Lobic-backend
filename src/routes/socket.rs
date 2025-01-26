@@ -31,6 +31,10 @@ pub async fn handle_socket(socket: WebSocket, State(app_state): State<AppState>)
 
 	// Receiving msg through sockets
 	tokio::spawn(async move {
+		// Temporary user state
+		let mut user_id: Option<String> = None;
+		let mut curr_lobby_id: Option<String> = None;
+
 		while let Some(Ok(message)) = receiver.next().await {
 			if let Message::Text(text) = message {
 				// Extracting payload
@@ -67,6 +71,29 @@ pub async fn handle_socket(socket: WebSocket, State(app_state): State<AppState>)
 				// Returning response to the client
 				match response {
 					Ok(soc_res) => {
+
+						// Storing some intermidiate data
+						match soc_res.r#for {
+							OpCode::CONNECT => {
+								user_id = Some(soc_res.value.as_str().unwrap().to_string());
+							},
+							OpCode::CREATE_LOBBY => {
+								curr_lobby_id = Some(
+									soc_res.value.get("lobby_id").unwrap().as_str().unwrap().to_string()
+								);
+							},
+							OpCode::JOIN_LOBBY => {
+								curr_lobby_id = Some(
+									soc_res.value.get("lobby_id").unwrap().as_str().unwrap().to_string()
+								);
+							},
+							OpCode::LEAVE_LOBBY => {
+								curr_lobby_id = None;
+							},
+							_ => (),
+						};
+
+						// Sending the final response
 						let _ = tx.send(Message::Text(soc_res.to_string()));
 					}
 					Err(err) => {
@@ -79,6 +106,15 @@ pub async fn handle_socket(socket: WebSocket, State(app_state): State<AppState>)
 					}
 				}
 			}
+		}
+
+		// If the user suddenly disconnects, disconnect the user from the lobby
+		if let Some(lobby_id) = curr_lobby_id {
+			let payload = json!({
+				"lobby_id": lobby_id,
+				"user_id": user_id.unwrap(),
+			});
+			let _ = handle_leave_lobby(payload, &db_pool, &lobby_pool, &user_pool);
 		}
 	});
 
@@ -115,7 +151,7 @@ fn handle_connect(
 	let response = SocketResponse {
 		op_code: OpCode::OK,
 		r#for: OpCode::CONNECT,
-		value: "Sucessfully connected to ws.".into(),
+		value: payload.user_id.clone().into(),
 	};
 
 	user_pool.insert(&payload.user_id, tx);
@@ -188,7 +224,7 @@ fn handle_join_lobby(
 }
 
 // :leave_lobby
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 struct LeaveLobbyPayload {
 	pub lobby_id: String,
 	pub user_id: String,

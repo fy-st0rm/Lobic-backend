@@ -9,7 +9,7 @@ pub const MUSIC_STORAGE: &str = "./storage/music_db";
 pub const USER_PFP_STORAGE: &str = "./storage/users_pfps";
 pub const PLAYLIST_COVER_IMG_STORAGE: &str = "./storage/playlists_cover_img";
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub enum OpCode {
 	OK,
 	ERROR,

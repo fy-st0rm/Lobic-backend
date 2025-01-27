@@ -38,11 +38,10 @@ diesel::table! {
 }
 
 diesel::table! {
-    playlist_shares (playlist_id, shared_to_user_id) {
+    playlist_shares (playlist_id, contributor_user_id) {
         playlist_id -> Text,
-        owner_user_id -> Text,
-        shared_to_user_id -> Text,
-        share_permission -> Text,
+        contributor_user_id -> Text,
+        is_writable -> Bool,
     }
 }
 
@@ -87,6 +86,7 @@ diesel::joinable!(notifications -> users (user_id));
 diesel::joinable!(play_log -> music (music_id));
 diesel::joinable!(play_log -> users (user_id));
 diesel::joinable!(playlist_shares -> playlists (playlist_id));
+diesel::joinable!(playlist_shares -> users (contributor_user_id));
 diesel::joinable!(playlist_songs -> music (music_id));
 diesel::joinable!(playlist_songs -> playlists (playlist_id));
 diesel::joinable!(playlists -> users (user_id));

@@ -41,10 +41,9 @@ CREATE TABLE playlist_songs (
 
 CREATE TABLE playlist_shares (
 	playlist_id TEXT NOT NULL REFERENCES playlists(playlist_id),
-	owner_user_id TEXT NOT NULL REFERENCES users(user_id),
-	shared_to_user_id TEXT NOT NULL REFERENCES users(user_id),
-	share_permission TEXT NOT NULL,
-	PRIMARY KEY (playlist_id, shared_to_user_id)
+	contributor_user_id TEXT NOT NULL REFERENCES users(user_id),
+	is_writable BOOLEAN NOT NULL,
+	PRIMARY KEY (playlist_id,contributor_user_id)
 );
 
 --for Recently Played of each user

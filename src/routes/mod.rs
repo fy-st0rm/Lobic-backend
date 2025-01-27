@@ -33,6 +33,11 @@ pub mod playlist {
 	pub mod get_users_playlists;
 	pub mod remove_song_from_playlist;
 	pub mod update_playlist_cover_img;
+	pub mod combined_playlist {
+		pub mod add_contributor;
+		pub mod fetch_all_contributors;
+		pub mod remove_contributor;
+	}
 }
 pub mod users {
 	pub mod add_friend;

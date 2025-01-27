@@ -20,10 +20,18 @@ use crate::{
 		},
 		notify::{get_all_notif, remove_notif},
 		playlist::{
-			add_song_to_playlist::add_song_to_playlist, create_new_playlist::create_playlist,
-			delete_playlist::delete_playlist, get_playlist_cover_img::get_playlist_cover_img,
-			get_playlist_music::get_playlist_music, get_users_playlists::get_users_playlists,
-			remove_song_from_playlist::remove_song_from_playlist, update_playlist_cover_img::update_playlist_cover_img,
+			add_song_to_playlist::add_song_to_playlist,
+			combined_playlist::{
+				add_contributor::add_contributor, fetch_all_contributors::fetch_all_contributors,
+				remove_contributor::remove_contributor,
+			},
+			create_new_playlist::create_playlist,
+			delete_playlist::delete_playlist,
+			get_playlist_cover_img::get_playlist_cover_img,
+			get_playlist_music::get_playlist_music,
+			get_users_playlists::get_users_playlists,
+			remove_song_from_playlist::remove_song_from_playlist,
+			update_playlist_cover_img::update_playlist_cover_img,
 		},
 		socket::websocket_handler,
 		users::{
@@ -57,7 +65,6 @@ pub fn configure_routes(app_state: AppState) -> Router {
 		.route("/music/log_song_play", post(log_song_play))
 		.route("/music/get_recently_played", get(get_recently_played))
 		.route("/music/get_trending", get(get_trending_songs))
-		// @TODO :combined playlist --add partner, remove partner?,fetch partners
 		//liked songs
 		.route("/music/liked_song/add", post(add_to_liked_songs))
 		.route("/music/liked_song/remove", post(remove_from_liked_songs))
@@ -76,6 +83,10 @@ pub fn configure_routes(app_state: AppState) -> Router {
 		.route("/playlist/cover_img/:playlist_id", get(get_playlist_cover_img))
 		.route("/playlist/remove_song_from_playlist", post(remove_song_from_playlist))
 		.route("/playlist/delete/:curr_playlist_id", post(delete_playlist))
+		//combined playlists
+		.route("/playlist/combined/add_contributor", post(add_contributor))
+		.route("/playlist/combined/remove_contributor", post(remove_contributor))
+		.route("/playlist/combined/fetch_contributors", get(fetch_all_contributors))
 		//user stuff
 		.route("/user/update_pfp", post(update_pfp)) // @TODO :support non png image
 		.route("/user/get_pfp/:filename", get(get_user_pfp)) // @TODO : support non png

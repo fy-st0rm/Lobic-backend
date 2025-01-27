@@ -62,13 +62,12 @@ pub struct PlaylistSong {
 	pub song_added_date_time: String,
 }
 
-#[derive(Insertable, Queryable, Debug)]
+#[derive(Insertable, Queryable, Debug, Selectable, Serialize, Deserialize)]
 #[diesel(table_name = playlist_shares)]
 pub struct PlaylistShare {
 	pub playlist_id: String,
-	pub owner_user_id: String,
-	pub shared_to_user_id: String,
-	pub share_permission: String,
+	pub contributor_user_id: String,
+	pub is_writable: bool,
 }
 
 #[derive(Insertable, Queryable, Debug)]

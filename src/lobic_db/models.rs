@@ -33,6 +33,16 @@ pub struct Music {
 	pub times_played: i32,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct MusicResponse {
+	pub id: String,
+	pub artist: String,
+	pub title: String,
+	pub album: String,
+	pub genre: String,
+	pub times_played: i32,
+}
+
 #[derive(Insertable, Queryable, Debug, Selectable, Serialize, Deserialize)]
 #[diesel(table_name = playlists)]
 pub struct Playlist {
@@ -118,4 +128,3 @@ impl From<Notification> for Value {
 		serde_json::to_value(&notif).unwrap()
 	}
 }
-

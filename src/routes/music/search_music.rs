@@ -1,26 +1,15 @@
-use crate::config::COVER_IMG_STORAGE;
 use crate::core::app_state::AppState;
 use crate::lobic_db::models::Music;
+use crate::lobic_db::models::MusicResponse;
 use axum::{
 	extract::{Query, State},
 	http::{header, StatusCode},
 	response::Response,
 };
 use diesel::prelude::*;
-use serde::{Deserialize, Serialize};
-use std::{cmp::Ordering, fs};
+use serde::Deserialize;
+use std::cmp::Ordering;
 use strsim::jaro_winkler;
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct MusicResponse {
-	pub id: String,
-	pub artist: String,
-	pub title: String,
-	pub album: String,
-	pub genre: String,
-	pub cover_art_path: Option<String>,
-	pub times_played: i32,
-}
 
 #[derive(Deserialize)]
 pub struct SearchQuery {
@@ -113,19 +102,13 @@ pub async fn search_music(State(app_state): State<AppState>, Query(params): Quer
 		.into_iter()
 		.skip(params.start_index)
 		.take(params.page_length.unwrap_or(10))
-		.map(|(entry, _)| {
-			let cover_art_path = format!("{COVER_IMG_STORAGE}/{}.png", entry.music_id);
-			let has_cover = fs::metadata(&cover_art_path).is_ok();
-
-			MusicResponse {
-				id: entry.music_id,
-				artist: entry.artist,
-				title: entry.title,
-				album: entry.album,
-				genre: entry.genre,
-				cover_art_path: has_cover.then_some(cover_art_path),
-				times_played: entry.times_played,
-			}
+		.map(|(entry, _)| MusicResponse {
+			id: entry.music_id,
+			artist: entry.artist,
+			title: entry.title,
+			album: entry.album,
+			genre: entry.genre,
+			times_played: entry.times_played,
 		})
 		.collect::<Vec<_>>();
 

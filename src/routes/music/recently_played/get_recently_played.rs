@@ -1,27 +1,13 @@
-use crate::core::app_state::AppState;
+use crate::{core::app_state::AppState, lobic_db::models::MusicResponse};
 use axum::{
 	extract::{Query, State},
 	http::{header, StatusCode},
 	response::Response,
 };
 use diesel::prelude::*;
-use serde::{Deserialize, Serialize};
-use std::fs;
+use serde::Deserialize;
 
-use crate::config::{COVER_IMG_STORAGE, MUSIC_STORAGE};
 use crate::schema::{music, play_log};
-
-#[derive(Debug, Serialize)]
-pub struct RecentlyPlayedResponse {
-	pub id: String,
-	pub filename: String,
-	pub artist: String,
-	pub title: String,
-	pub album: String,
-	pub genre: String,
-	pub times_played: i32,
-	pub cover_art_path: Option<String>,
-}
 // /music/get_recently_played?user_id=123&start_index=10&page_length=20
 // /music/get_recently_played?user_id=123&page_length=20
 // /music/get_recently_played?user_id=123
@@ -80,22 +66,15 @@ pub async fn get_recently_played(
 			}
 
 			// Map the database entries to the response format
-			let responses: Vec<RecentlyPlayedResponse> = music_entries
+			let responses: Vec<MusicResponse> = music_entries
 				.into_iter()
-				.map(|(music_id, artist, title, album, genre, times_played)| {
-					let cover_art_path = format!("{}/{}.png", COVER_IMG_STORAGE, music_id);
-					let has_cover = fs::metadata(&cover_art_path).is_ok();
-
-					RecentlyPlayedResponse {
-						id: music_id.clone(),
-						filename: format!("{}/{}.mp3", MUSIC_STORAGE, music_id),
-						artist,
-						title,
-						album,
-						genre,
-						times_played,
-						cover_art_path: has_cover.then_some(cover_art_path),
-					}
+				.map(|(music_id, artist, title, album, genre, times_played)| MusicResponse {
+					id: music_id.clone(),
+					artist,
+					title,
+					album,
+					genre,
+					times_played,
 				})
 				.collect();
 

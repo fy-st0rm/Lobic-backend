@@ -9,7 +9,6 @@ use axum::{
 };
 use std::path::PathBuf;
 use tokio::{fs::File, io::AsyncReadExt};
-use tracing::error;
 
 use crate::config::USER_PFP_STORAGE;
 
@@ -19,15 +18,13 @@ pub async fn get_user_pfp(Path(filename): Path<String>) -> impl IntoResponse {
 
 	let mut file = match File::open(&path).await {
 		Ok(file) => file,
-		Err(err) => {
-			error!("User profile picture not found: {}", err);
+		Err(_) => {
 			return serve_default_user_pfp().await; // Serve the default image
 		}
 	};
 
 	let mut file_bytes = Vec::new();
-	if let Err(err) = file.read_to_end(&mut file_bytes).await {
-		error!("Failed to read user profile picture: {}", err);
+	if let Err(_) = file.read_to_end(&mut file_bytes).await {
 		return serve_default_user_pfp().await;
 	}
 
@@ -49,12 +46,9 @@ pub async fn get_user_pfp(Path(filename): Path<String>) -> impl IntoResponse {
 async fn serve_default_user_pfp() -> Response<Body> {
 	let default_path = PathBuf::from("assets/default_user_pfp.png");
 
-	error!("Serving default user profile picture from: {:?}", default_path);
-
 	let mut default_file = match File::open(&default_path).await {
 		Ok(file) => file,
-		Err(err) => {
-			error!("Failed to open default user profile picture: {}", err);
+		Err(_) => {
 			return Response::builder()
 				.status(StatusCode::INTERNAL_SERVER_ERROR)
 				.body(Body::from("Default user profile picture not found"))
@@ -63,8 +57,7 @@ async fn serve_default_user_pfp() -> Response<Body> {
 	};
 
 	let mut default_bytes = Vec::new();
-	if let Err(err) = default_file.read_to_end(&mut default_bytes).await {
-		error!("Failed to read default user profile picture: {}", err);
+	if let Err(_) = default_file.read_to_end(&mut default_bytes).await {
 		return Response::builder()
 			.status(StatusCode::INTERNAL_SERVER_ERROR)
 			.body(Body::from("Failed to read default user profile picture file"))

@@ -4,23 +4,10 @@ use axum::{
 	response::Response,
 };
 use diesel::prelude::*;
-use serde::{Deserialize, Serialize};
-use std::fs;
+use serde::Deserialize;
 
-use crate::config::{COVER_IMG_STORAGE, MUSIC_STORAGE};
+use crate::lobic_db::models::MusicResponse;
 use crate::{core::app_state::AppState, lobic_db::models::Music};
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct MusicResponse {
-	pub id: String,
-	pub filename: String,
-	pub artist: String,
-	pub title: String,
-	pub album: String,
-	pub genre: String,
-	pub times_played: i32,
-	pub cover_art_path: Option<String>,
-}
 
 #[derive(Deserialize)]
 pub struct MusicQuery {
@@ -84,20 +71,13 @@ pub async fn get_music(State(app_state): State<AppState>, Query(params): Query<M
 
 			let responses: Vec<MusicResponse> = music_entries
 				.into_iter()
-				.map(|entry| {
-					let cover_art_path = format!("{}/{}.png", COVER_IMG_STORAGE, entry.music_id);
-					let has_cover = fs::metadata(&cover_art_path).is_ok();
-
-					MusicResponse {
-						id: entry.music_id.clone(),
-						filename: format!("{}/{}.mp3", MUSIC_STORAGE, entry.music_id),
-						artist: entry.artist,
-						title: entry.title,
-						album: entry.album,
-						genre: entry.genre,
-						times_played: entry.times_played,
-						cover_art_path: has_cover.then_some(cover_art_path),
-					}
+				.map(|entry| MusicResponse {
+					id: entry.music_id.clone(),
+					artist: entry.artist,
+					title: entry.title,
+					album: entry.album,
+					genre: entry.genre,
+					times_played: entry.times_played,
 				})
 				.collect();
 

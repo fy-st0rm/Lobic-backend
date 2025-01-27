@@ -4,24 +4,12 @@ use axum::{
 	response::Response,
 };
 use diesel::prelude::*;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
-use crate::config::COVER_IMG_STORAGE;
 use crate::core::app_state::AppState;
+use crate::lobic_db::models::MusicResponse;
 
 use crate::schema::music;
-
-#[derive(Debug, Serialize)]
-pub struct TrendingSongsResponse {
-	pub id: String,
-	pub filename: String,
-	pub artist: String,
-	pub title: String,
-	pub album: String,
-	pub genre: String,
-	pub times_played: i32,
-	pub cover_art_path: Option<String>,
-}
 
 #[derive(Debug, Deserialize)]
 pub struct TrendingSongsQueryParams {
@@ -78,22 +66,15 @@ pub async fn get_trending_songs(
 			}
 
 			//Map the database entries to the response format
-			let responses: Vec<TrendingSongsResponse> = music_entries
+			let responses: Vec<MusicResponse> = music_entries
 				.into_iter()
-				.map(|(music_id, artist, title, album, genre, times_played)| {
-					let cover_art_path = format!("{}/{}.png", COVER_IMG_STORAGE, music_id);
-					let has_cover = std::fs::metadata(&cover_art_path).is_ok();
-
-					TrendingSongsResponse {
-						id: music_id.clone(),
-						filename: format!("{}/{}.mp3", crate::config::MUSIC_STORAGE, music_id),
-						artist: artist,
-						title: title,
-						album: album,
-						genre: genre,
-						times_played: times_played,
-						cover_art_path: has_cover.then_some(cover_art_path),
-					}
+				.map(|(music_id, artist, title, album, genre, times_played)| MusicResponse {
+					id: music_id.clone(),
+					artist: artist,
+					title: title,
+					album: album,
+					genre: genre,
+					times_played: times_played,
 				})
 				.collect();
 

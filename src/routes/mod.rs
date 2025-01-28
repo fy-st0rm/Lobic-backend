@@ -2,16 +2,15 @@ pub mod music {
 	pub mod browse_all;
 	pub mod get_cover_image;
 	pub mod get_music;
+	pub mod log_song_play;
 	pub mod save_music;
 	pub mod search_music;
 	pub mod send_music;
 	pub mod recently_played {
 		pub mod get_recently_played;
-		pub mod log_song_play;
 	}
 	pub mod trending {
 		pub mod get_trending_songs;
-		pub mod increment_times_played;
 	}
 	pub mod top_tracks {
 		pub mod get_top_tracks;

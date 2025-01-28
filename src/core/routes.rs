@@ -11,12 +11,13 @@ use crate::{
 				add_to_liked_song::add_to_liked_songs, get_liked_songs::get_liked_songs, is_song_liked::is_song_liked,
 				remove_from_liked_songs::remove_from_liked_songs, toggle_liked_song::toggle_liked_song,
 			},
-			recently_played::{get_recently_played::get_recently_played, log_song_play::log_song_play},
+			log_song_play::log_song_play,
+			recently_played::get_recently_played::get_recently_played,
 			save_music::save_music,
 			search_music::search_music,
 			send_music::send_music,
 			top_tracks::get_top_tracks::get_top_tracks,
-			trending::{get_trending_songs::get_trending_songs, increment_times_played::incr_times_played},
+			trending::get_trending_songs::get_trending_songs,
 		},
 		notify::{get_all_notif, remove_notif},
 		playlist::{
@@ -73,7 +74,6 @@ pub fn configure_routes(app_state: AppState) -> Router {
 		.route("/music/liked_song/toggle_like", post(toggle_liked_song))
 		//top tracks
 		.route("/music/get_top_tracks", get(get_top_tracks))
-		.route("/music/incr_times_played/:music_uuid", post(incr_times_played))
 		//playlist stuff
 		.route("/playlist/new", post(create_playlist))
 		.route("/playlist/add_song", post(add_song_to_playlist))

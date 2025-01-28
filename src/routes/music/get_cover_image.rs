@@ -8,7 +8,7 @@ use std::path::PathBuf;
 use tokio::{fs::File, io::AsyncReadExt};
 
 pub async fn get_cover_image(Path(img_uuid): Path<String>) -> Response<axum::body::Body> {
-	let filename = format!("{COVER_IMG_STORAGE}/{img_uuid}.png");
+	let filename = format!("{img_uuid}.png");
 	let mut path = PathBuf::from(COVER_IMG_STORAGE);
 	path.push(&filename);
 

@@ -78,7 +78,6 @@ pub async fn get_top_tracks(
 						genre: entry.genre,
 						times_played: entry.times_played,
 						image_url: img_uuid.to_string(),
-						// image_url: format!("http://127.0.0.1:8080/image/{img_uuid}"),
 					}
 				})
 				.collect();

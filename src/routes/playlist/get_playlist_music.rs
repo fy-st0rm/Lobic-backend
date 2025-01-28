@@ -7,18 +7,32 @@ use axum::{
 };
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
+use std::hash::Hash;
+use std::{collections::hash_map::DefaultHasher, hash::Hasher};
+use uuid::Uuid;
 
-#[derive(Debug, Serialize, Deserialize, Queryable)]
+#[derive(Queryable)]
+struct MusicQueryResult {
+	music_id: String,
+	artist: String,
+	title: String,
+	album: String,
+	genre: String,
+	song_added_date_time: String,
+}
+
+#[derive(Debug, Serialize)]
 pub struct PlaylistMusicResponse {
 	pub music_id: String,
 	pub artist: String,
 	pub title: String,
 	pub album: String,
 	pub genre: String,
+	pub image_url: String,
 	pub song_added_date_time: String,
 }
 
-#[derive(Debug, Deserialize, Queryable)]
+#[derive(Debug, Deserialize)]
 pub struct PlaylistQueryParams {
 	pub playlist_id: String,
 }
@@ -28,6 +42,26 @@ use crate::lobic_db::models::Playlist;
 pub struct PlaylistDetailsResponse {
 	pub playlist: Playlist,
 	pub songs: Vec<PlaylistMusicResponse>,
+}
+
+impl PlaylistMusicResponse {
+	fn from_query_result(result: MusicQueryResult) -> Self {
+		let mut hasher = DefaultHasher::new();
+		result.artist.hash(&mut hasher);
+		result.album.hash(&mut hasher);
+		let hash = hasher.finish();
+		let img_uuid = Uuid::from_u64_pair(hash, hash);
+
+		PlaylistMusicResponse {
+			music_id: result.music_id,
+			artist: result.artist,
+			title: result.title,
+			album: result.album,
+			genre: result.genre,
+			image_url: img_uuid.to_string(),
+			song_added_date_time: result.song_added_date_time,
+		}
+	}
 }
 
 pub async fn get_playlist_music(
@@ -61,8 +95,8 @@ pub async fn get_playlist_music(
 		}
 	};
 
-	// Fetch songs in the playlist
-	let songs_query = playlist_songs::table
+	// Fetch songs in the playlist with correct type mapping
+	let query_results = playlist_songs::table
 		.filter(playlist_songs::playlist_id.eq(&params.playlist_id))
 		.inner_join(music::table)
 		.select((
@@ -73,10 +107,13 @@ pub async fn get_playlist_music(
 			music::genre,
 			playlist_songs::song_added_date_time,
 		))
-		.into_boxed();
+		.load::<MusicQueryResult>(&mut db_conn);
 
-	let songs = match songs_query.load::<PlaylistMusicResponse>(&mut db_conn) {
-		Ok(songs) => songs,
+	let songs = match query_results {
+		Ok(results) => results
+			.into_iter()
+			.map(PlaylistMusicResponse::from_query_result)
+			.collect::<Vec<_>>(),
 		Err(err) => {
 			return Response::builder()
 				.status(StatusCode::INTERNAL_SERVER_ERROR)

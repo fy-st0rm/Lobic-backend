@@ -3,7 +3,7 @@ use axum::{
 	http::{header, StatusCode},
 	response::Response,
 };
-use diesel::prelude::*;
+use diesel::{dsl::sql, prelude::*, sql_types::Integer};
 use serde::Deserialize;
 use std::{collections::hash_map::DefaultHasher, hash::Hash, hash::Hasher};
 use uuid::Uuid;
@@ -21,6 +21,7 @@ pub struct MusicQuery {
 	artist: Option<String>,
 	album: Option<String>,
 	genre: Option<String>,
+	randomizer: Option<bool>,
 	#[serde(default)]
 	start_index: i64,
 	page_length: Option<i64>,
@@ -55,10 +56,16 @@ pub async fn get_music(State(app_state): State<AppState>, Query(params): Query<M
 	if let Some(genre_val) = params.genre {
 		query = query.filter(genre.eq(genre_val));
 	}
+	if params.randomizer.unwrap_or(false) {
+		query = query.order(sql::<Integer>("RANDOM()"));
+	}
 
 	query = query.offset(params.start_index);
+
 	if let Some(length) = params.page_length {
-		query = query.limit(length);
+		if length > 0 {
+			query = query.limit(length);
+		}
 	}
 
 	match query.load::<Music>(&mut db_conn) {

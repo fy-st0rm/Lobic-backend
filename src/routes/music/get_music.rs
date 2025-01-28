@@ -5,9 +5,14 @@ use axum::{
 };
 use diesel::prelude::*;
 use serde::Deserialize;
+use std::{collections::hash_map::DefaultHasher, hash::Hash, hash::Hasher};
+use uuid::Uuid;
 
-use crate::lobic_db::models::MusicResponse;
-use crate::{core::app_state::AppState, lobic_db::models::Music};
+use crate::{
+	core::app_state::AppState,
+	lobic_db::models::{Music, MusicResponse},
+	schema::music::dsl::*,
+};
 
 #[derive(Deserialize)]
 pub struct MusicQuery {
@@ -33,8 +38,6 @@ pub async fn get_music(State(app_state): State<AppState>, Query(params): Query<M
 		}
 	};
 
-	use crate::schema::music::dsl::*;
-
 	let mut query = music.into_boxed();
 
 	if let Some(title_val) = params.title {
@@ -58,9 +61,7 @@ pub async fn get_music(State(app_state): State<AppState>, Query(params): Query<M
 		query = query.limit(length);
 	}
 
-	let result = query.load::<Music>(&mut db_conn);
-
-	match result {
+	match query.load::<Music>(&mut db_conn) {
 		Ok(music_entries) => {
 			if music_entries.is_empty() {
 				return Response::builder()
@@ -71,13 +72,23 @@ pub async fn get_music(State(app_state): State<AppState>, Query(params): Query<M
 
 			let responses: Vec<MusicResponse> = music_entries
 				.into_iter()
-				.map(|entry| MusicResponse {
-					id: entry.music_id.clone(),
-					artist: entry.artist,
-					title: entry.title,
-					album: entry.album,
-					genre: entry.genre,
-					times_played: entry.times_played,
+				.map(|entry| {
+					// Generate image URL based on artist and album
+					let mut hasher = DefaultHasher::new();
+					entry.artist.hash(&mut hasher);
+					entry.album.hash(&mut hasher);
+					let hash = hasher.finish();
+					let img_uuid = Uuid::from_u64_pair(hash, hash);
+
+					MusicResponse {
+						id: entry.music_id.clone(),
+						artist: entry.artist,
+						title: entry.title,
+						album: entry.album,
+						genre: entry.genre,
+						times_played: entry.times_played,
+						image_url: img_uuid.to_string(),
+					}
 				})
 				.collect();
 

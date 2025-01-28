@@ -11,6 +11,9 @@ use serde::Deserialize;
 use std::cmp::Ordering;
 use strsim::jaro_winkler;
 
+use std::{collections::hash_map::DefaultHasher, hash::Hash, hash::Hasher};
+use uuid::Uuid;
+
 #[derive(Deserialize)]
 pub struct SearchQuery {
 	search_string: String,
@@ -102,13 +105,21 @@ pub async fn search_music(State(app_state): State<AppState>, Query(params): Quer
 		.into_iter()
 		.skip(params.start_index)
 		.take(params.page_length.unwrap_or(10))
-		.map(|(entry, _)| MusicResponse {
-			id: entry.music_id,
-			artist: entry.artist,
-			title: entry.title,
-			album: entry.album,
-			genre: entry.genre,
-			times_played: entry.times_played,
+		.map(|(entry, _)| {
+			let mut hasher = DefaultHasher::new();
+			entry.artist.hash(&mut hasher);
+			entry.album.hash(&mut hasher);
+			let hash = hasher.finish();
+			let img_uuid = Uuid::from_u64_pair(hash, hash);
+			MusicResponse {
+				id: entry.music_id,
+				artist: entry.artist,
+				title: entry.title,
+				album: entry.album,
+				genre: entry.genre,
+				times_played: entry.times_played,
+				image_url: img_uuid.to_string(),
+			}
 		})
 		.collect::<Vec<_>>();
 

@@ -9,7 +9,10 @@ use serde::Deserialize;
 use crate::core::app_state::AppState;
 use crate::lobic_db::models::MusicResponse;
 
-use crate::schema::music;
+use std::{collections::hash_map::DefaultHasher, hash::Hash, hash::Hasher};
+use uuid::Uuid;
+
+use crate::{lobic_db::models::Music, schema::music};
 
 #[derive(Debug, Deserialize)]
 pub struct TrendingSongsQueryParams {
@@ -34,14 +37,7 @@ pub async fn get_trending_songs(
 
 	//Fetch the most played songs with pagination
 	let mut query = music::table
-		.select((
-			music::music_id,
-			music::artist,
-			music::title,
-			music::album,
-			music::genre,
-			music::times_played,
-		))
+		.select(music::all_columns)
 		.order(music::times_played.desc())
 		.offset(params.start_index)
 		.into_boxed();
@@ -53,32 +49,37 @@ pub async fn get_trending_songs(
 		}
 		//else infinity
 	}
-	let result = query.load::<(String, String, String, String, String, i32)>(&mut db_conn);
-
-	//Handle the query result
-	match result {
+	match query.load::<Music>(&mut db_conn) {
 		Ok(music_entries) => {
 			if music_entries.is_empty() {
 				return Response::builder()
 					.status(StatusCode::NOT_FOUND)
-					.body("No trending songs found".to_string())
+					.body("No top tracks found".to_string())
 					.unwrap();
 			}
 
-			//Map the database entries to the response format
 			let responses: Vec<MusicResponse> = music_entries
 				.into_iter()
-				.map(|(music_id, artist, title, album, genre, times_played)| MusicResponse {
-					id: music_id.clone(),
-					artist: artist,
-					title: title,
-					album: album,
-					genre: genre,
-					times_played: times_played,
+				.map(|entry| {
+					// Generate image URL based on artist and album
+					let mut hasher = DefaultHasher::new();
+					entry.artist.hash(&mut hasher);
+					entry.album.hash(&mut hasher);
+					let hash = hasher.finish();
+					let img_uuid = Uuid::from_u64_pair(hash, hash);
+
+					MusicResponse {
+						id: entry.music_id,
+						artist: entry.artist,
+						title: entry.title,
+						album: entry.album,
+						genre: entry.genre,
+						times_played: entry.times_played,
+						image_url: img_uuid.to_string(),
+					}
 				})
 				.collect();
 
-			// Serialize the response and return it
 			match serde_json::to_string(&responses) {
 				Ok(json) => Response::builder()
 					.status(StatusCode::OK)

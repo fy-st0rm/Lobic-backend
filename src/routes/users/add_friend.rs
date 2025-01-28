@@ -1,8 +1,8 @@
 use crate::config::OpCode;
 use crate::core::app_state::AppState;
-use crate::routes::notify::notify;
 use crate::lobic_db::db::*;
-use crate::lobic_db::models::{UserFriendship, Notification};
+use crate::lobic_db::models::{Notification, UserFriendship};
+use crate::routes::notify::notify;
 use crate::schema::user_friendship::dsl::*;
 
 use axum::{extract::State, http::status::StatusCode, response::Response, Json};

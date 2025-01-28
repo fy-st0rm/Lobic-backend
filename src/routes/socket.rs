@@ -71,25 +71,22 @@ pub async fn handle_socket(socket: WebSocket, State(app_state): State<AppState>)
 				// Returning response to the client
 				match response {
 					Ok(soc_res) => {
-
 						// Storing some intermidiate data
 						match soc_res.r#for {
 							OpCode::CONNECT => {
 								user_id = Some(soc_res.value.as_str().unwrap().to_string());
-							},
+							}
 							OpCode::CREATE_LOBBY => {
-								curr_lobby_id = Some(
-									soc_res.value.get("lobby_id").unwrap().as_str().unwrap().to_string()
-								);
-							},
+								curr_lobby_id =
+									Some(soc_res.value.get("lobby_id").unwrap().as_str().unwrap().to_string());
+							}
 							OpCode::JOIN_LOBBY => {
-								curr_lobby_id = Some(
-									soc_res.value.get("lobby_id").unwrap().as_str().unwrap().to_string()
-								);
-							},
+								curr_lobby_id =
+									Some(soc_res.value.get("lobby_id").unwrap().as_str().unwrap().to_string());
+							}
 							OpCode::LEAVE_LOBBY => {
 								curr_lobby_id = None;
-							},
+							}
 							_ => (),
 						};
 

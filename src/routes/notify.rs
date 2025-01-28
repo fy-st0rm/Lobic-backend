@@ -1,21 +1,17 @@
 use crate::config::{OpCode, SocketResponse};
 use crate::core::app_state::AppState;
 use crate::core::user_pool::UserPool;
-use crate::lobic_db::models::{NotifModel, Notification};
 use crate::lobic_db::db::DatabasePool;
+use crate::lobic_db::models::{NotifModel, Notification};
 use crate::schema::notifications::dsl::*;
 
-use std::collections::HashMap;
-use diesel::prelude::*;
 use axum::{
-	extract::{
-		ws::Message,
-		State,
-		Path,
-	},
+	extract::{ws::Message, Path, State},
 	http::status::StatusCode,
 	response::Response,
 };
+use diesel::prelude::*;
+use std::collections::HashMap;
 
 pub fn notify(client_id: &str, notif: Notification, db_pool: &DatabasePool, user_pool: &UserPool) {
 	let mut db_conn = match db_pool.get() {
@@ -36,8 +32,8 @@ pub fn notify(client_id: &str, notif: Notification, db_pool: &DatabasePool, user
 			}
 			.to_string();
 			let _ = conn.send(Message::Text(response));
-		},
-		None => () // Triggered when client is offline
+		}
+		None => (), // Triggered when client is offline
 	};
 
 	// Storing the notification
@@ -47,18 +43,11 @@ pub fn notify(client_id: &str, notif: Notification, db_pool: &DatabasePool, user
 		.unwrap();
 }
 
-pub async fn get_all_notif(
-	State(app_state): State<AppState>,
-	Path(client_id): Path<String>
-) -> Response<String> {
+pub async fn get_all_notif(State(app_state): State<AppState>, Path(client_id): Path<String>) -> Response<String> {
 	let mut db_conn = match app_state.db_pool.get() {
 		Ok(conn) => conn,
 		Err(err) => {
-			let msg = format!(
-				"Error {}:{}: Failed to get DB from pool: {err}",
-				file!(),
-				line!()
-			);
+			let msg = format!("Error {}:{}: Failed to get DB from pool: {err}", file!(), line!());
 			return Response::builder()
 				.status(StatusCode::INTERNAL_SERVER_ERROR)
 				.body(msg)
@@ -75,15 +64,12 @@ pub async fn get_all_notif(
 		Ok(results) => results,
 		Err(_) => {
 			let msg = format!("Invalid client id: {}", client_id);
-			return Response::builder()
-				.status(StatusCode::BAD_REQUEST)
-				.body(msg)
-				.unwrap();
+			return Response::builder().status(StatusCode::BAD_REQUEST).body(msg).unwrap();
 		}
 	};
 
 	// Mapping the models into the notifications
-	let notifs: HashMap<String, Notification> = results 
+	let notifs: HashMap<String, Notification> = results
 		.into_iter()
 		.map(|entry| {
 			let notif = Notification {
@@ -97,24 +83,14 @@ pub async fn get_all_notif(
 
 	// Converting to json string
 	let response = serde_json::to_string(&notifs).unwrap();
-	Response::builder()
-		.status(StatusCode::OK)
-		.body(response)
-		.unwrap()
+	Response::builder().status(StatusCode::OK).body(response).unwrap()
 }
 
-pub async fn remove_notif(
-	State(app_state): State<AppState>,
-	Path(notif_id): Path<String>
-) -> Response<String> {
+pub async fn remove_notif(State(app_state): State<AppState>, Path(notif_id): Path<String>) -> Response<String> {
 	let mut db_conn = match app_state.db_pool.get() {
 		Ok(conn) => conn,
 		Err(err) => {
-			let msg = format!(
-				"Error {}:{}: Failed to get DB from pool: {err}",
-				file!(),
-				line!()
-			);
+			let msg = format!("Error {}:{}: Failed to get DB from pool: {err}", file!(), line!());
 			return Response::builder()
 				.status(StatusCode::INTERNAL_SERVER_ERROR)
 				.body(msg)
@@ -123,18 +99,13 @@ pub async fn remove_notif(
 	};
 
 	// Checking if the notification with that id exists or not
-	let query = notifications
-		.filter(id.eq(&notif_id))
-		.load::<NotifModel>(&mut db_conn);
+	let query = notifications.filter(id.eq(&notif_id)).load::<NotifModel>(&mut db_conn);
 
 	let _ = match query {
 		Ok(_) => (),
 		Err(_) => {
 			let msg = format!("Invalid notification id: {}", notif_id);
-			return Response::builder()
-				.status(StatusCode::BAD_REQUEST)
-				.body(msg)
-				.unwrap();
+			return Response::builder().status(StatusCode::BAD_REQUEST).body(msg).unwrap();
 		}
 	};
 

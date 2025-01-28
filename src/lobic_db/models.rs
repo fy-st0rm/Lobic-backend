@@ -41,6 +41,7 @@ pub struct MusicResponse {
 	pub album: String,
 	pub genre: String,
 	pub times_played: i32,
+	pub image_url: String,
 }
 
 #[derive(Insertable, Queryable, Debug, Selectable, Serialize, Deserialize)]

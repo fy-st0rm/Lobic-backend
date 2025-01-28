@@ -3,12 +3,7 @@ use crate::{
 	lobic_db::models::PlayLog,
 	schema::{music, play_log},
 };
-use axum::{
-	extract::State,
-	http::StatusCode,
-	response::{IntoResponse, Response},
-	Json,
-};
+use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
 use chrono::Utc;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};

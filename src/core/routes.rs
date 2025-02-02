@@ -48,6 +48,8 @@ use axum::{
 
 pub fn configure_routes(app_state: AppState) -> Router {
 	Router::new()
+		//load musics into storage
+		.route("/save_music", post(save_music))
 		//auth
 		.route("/", get(index))
 		.route("/get_user", get(get_user))
@@ -55,25 +57,27 @@ pub fn configure_routes(app_state: AppState) -> Router {
 		.route("/login", post(login))
 		.route("/logout", post(logout))
 		.route("/verify", get(verify))
-		//music
-		.route("/music/:music_id", get(send_music))
-		.route("/image/:img_uuid", get(get_cover_image))
-		.route("/save_music", post(save_music)) // @TODO :add support for non mp3 and musci with missing tags
-		.route("/music/get_music", get(get_music)) //^^^^^^^^^
+		//base
+		.route("/music/:music_id", get(send_music)) //get actual mp3 music
+		.route("/image/:img_uuid", get(get_cover_image)) //get the png cover image
+		//music data
 		.route("/search", get(search_music))
+		.route("/music/get_music", get(get_music))
+		//browse category
 		.route("/music/browse_all/:category", get(browse_all))
-		//recently played + trending songs
+		//recently played
 		.route("/music/log_song_play", post(log_song_play))
 		.route("/music/get_recently_played", get(get_recently_played))
+		//trending songs
 		.route("/music/get_trending", get(get_trending_songs))
+		//top tracks of a particular user
+		.route("/music/get_top_tracks", get(get_top_tracks))
 		//liked songs
 		.route("/music/liked_song/add", post(add_to_liked_songs))
 		.route("/music/liked_song/remove", post(remove_from_liked_songs))
 		.route("/music/liked_song/get", get(get_liked_songs))
 		.route("/music/liked_song/is_song_liked", get(is_song_liked))
 		.route("/music/liked_song/toggle_like", post(toggle_liked_song))
-		//top tracks
-		.route("/music/get_top_tracks", get(get_top_tracks))
 		//playlist stuff
 		.route("/playlist/new", post(create_playlist))
 		.route("/playlist/add_song", post(add_song_to_playlist))
@@ -91,6 +95,7 @@ pub fn configure_routes(app_state: AppState) -> Router {
 		.route("/user/update_pfp", post(update_pfp)) // @TODO :support non png image
 		.route("/user/get_pfp/:filename", get(get_user_pfp)) // @TODO : support non png
 		.route("/user/get_user_data/:user_uuid", get(get_user_data))
+		//friends stuff
 		.route("/add_friend", post(add_friend))
 		.route("/remove_friend", post(remove_friend))
 		.route("/user/search", get(search_user))

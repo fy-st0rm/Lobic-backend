@@ -4,7 +4,9 @@ use crate::{
 		auth::{login::login, logout::logout, signup::signup, verify::verify},
 		get_lobby::get_lobby,
 		music::{
-			browse_all::browse_all,
+			browse_category::{
+				browse_albums::browse_albums, browse_artists::browse_artists, browse_genres::browse_genres,
+			},
 			get_cover_image::get_cover_image,
 			get_music::get_music,
 			liked_songs::{
@@ -64,7 +66,9 @@ pub fn configure_routes(app_state: AppState) -> Router {
 		.route("/search", get(search_music))
 		.route("/music/get_music", get(get_music))
 		//browse category
-		.route("/music/browse_all/:category", get(browse_all))
+		.route("/music/browse_artists", get(browse_artists)) //returns Vec<artist, song_count ,Vec<image_uuid>>/ the image_uuids is capped to 4
+		.route("/music/browse_albums", get(browse_albums)) //returns Vec<album, song_count ,Vec<image_uuid>>/ the image_uuids is capped to 4
+		.route("/music/browse_genres", get(browse_genres)) //returns Vec<genre, song_count >
 		//recently played
 		.route("/music/log_song_play", post(log_song_play))
 		.route("/music/get_recently_played", get(get_recently_played))

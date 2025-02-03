@@ -1,5 +1,4 @@
 pub mod music {
-	pub mod browse_all;
 	pub mod get_cover_image;
 	pub mod get_music;
 	pub mod log_song_play;
@@ -21,6 +20,11 @@ pub mod music {
 		pub mod is_song_liked;
 		pub mod remove_from_liked_songs;
 		pub mod toggle_liked_song;
+	}
+	pub mod browse_category {
+		pub mod browse_albums;
+		pub mod browse_artists;
+		pub mod browse_genres;
 	}
 }
 pub mod playlist {

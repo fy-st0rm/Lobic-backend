@@ -1,15 +1,22 @@
 use crate::core::app_state::AppState;
 use axum::{
-	extract::State,
+	extract::{Query, State},
 	http::{header, StatusCode},
 	response::Response,
 };
 use diesel::prelude::*;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use uuid::Uuid;
+
+#[derive(Deserialize)]
+pub struct AlbumQuery {
+	#[serde(default)]
+	start_index: i64,
+	page_length: Option<i64>,
+}
 
 #[derive(Serialize)]
 struct AlbumResponse {
@@ -45,7 +52,7 @@ fn process_grouped_items(items: Vec<(String, String)>) -> Vec<AlbumResponse> {
 		.collect()
 }
 
-pub async fn browse_albums(State(app_state): State<AppState>) -> Response<String> {
+pub async fn browse_albums(State(app_state): State<AppState>, Query(params): Query<AlbumQuery>) -> Response<String> {
 	let mut db_conn = match app_state.db_pool.get() {
 		Ok(conn) => conn,
 		Err(err) => {
@@ -59,11 +66,16 @@ pub async fn browse_albums(State(app_state): State<AppState>) -> Response<String
 
 	use crate::schema::music::dsl::*;
 
-	let result = music
-		.select((artist, album))
-		.distinct()
-		.load::<(String, String)>(&mut db_conn)
-		.map(process_grouped_items);
+	let mut query = music.select((artist, album)).distinct().into_boxed();
+	query = query.offset(params.start_index);
+
+	if let Some(length) = params.page_length {
+		if length > 0 {
+			query = query.limit(length);
+		}
+	}
+
+	let result = query.load::<(String, String)>(&mut db_conn).map(process_grouped_items);
 
 	match result {
 		Ok(items) => match serde_json::to_string(&items) {

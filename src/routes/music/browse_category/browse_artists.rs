@@ -16,12 +16,14 @@ pub struct ArtistQuery {
 	start_index: i64,
 	page_length: Option<i64>,
 }
+
 #[derive(Serialize)]
 struct ArtistsResponse {
 	artist: String,
 	songs_count: i64,
 	image_uuids: Vec<String>,
 }
+
 fn generate_image_uuid(artist: &str, album: &str) -> String {
 	let mut hasher = DefaultHasher::new();
 	artist.hash(&mut hasher);
@@ -29,22 +31,22 @@ fn generate_image_uuid(artist: &str, album: &str) -> String {
 	let hash = hasher.finish();
 	Uuid::from_u64_pair(hash, hash).to_string()
 }
-use std::collections::HashMap;
-fn process_grouped_items(items: Vec<(String, String)>) -> Vec<ArtistsResponse> {
-	let mut artist_map: HashMap<String, (i64, Vec<String>)> = HashMap::new();
-	for (name, sub_name) in items {
-		let entry = artist_map.entry(name.clone()).or_insert((0, Vec::new()));
-		entry.0 += 1;
-		if entry.1.len() < 4 {
-			entry.1.push(generate_image_uuid(&name, &sub_name));
-		}
-	}
-	artist_map
+
+fn process_grouped_items(items: Vec<(String, Vec<String>, i64)>) -> Vec<ArtistsResponse> {
+	items
 		.into_iter()
-		.map(|(artist, (songs_count, image_uuids))| ArtistsResponse {
-			artist,
-			songs_count,
-			image_uuids,
+		.map(|(artist, albums, count)| {
+			let image_uuids: Vec<String> = albums
+				.iter()
+				.take(4)
+				.map(|album| generate_image_uuid(&artist, album))
+				.collect();
+
+			ArtistsResponse {
+				artist,
+				songs_count: count,
+				image_uuids,
+			}
 		})
 		.collect()
 }
@@ -62,8 +64,17 @@ pub async fn browse_artists(State(app_state): State<AppState>, Query(params): Qu
 	};
 
 	use crate::schema::music::dsl::*;
+	use diesel::dsl::sql;
 
-	let mut query = music.select((artist, album)).distinct().into_boxed();
+	let mut query = music
+		.group_by(artist)
+		.select((
+			artist,
+			sql("GROUP_CONCAT(DISTINCT album)").into_sql::<diesel::sql_types::Text>(),
+			sql("COUNT(DISTINCT music_id)").into_sql::<diesel::sql_types::BigInt>(),
+		))
+		.into_boxed();
+
 	query = query.offset(params.start_index);
 
 	if let Some(length) = params.page_length {
@@ -72,7 +83,19 @@ pub async fn browse_artists(State(app_state): State<AppState>, Query(params): Qu
 		}
 	}
 
-	let result = query.load::<(String, String)>(&mut db_conn).map(process_grouped_items);
+	let result = query
+		.load::<(String, String, i64)>(&mut db_conn)
+		.map(|items| {
+			// Convert the concatenated albums string to a Vec<String>
+			items
+				.into_iter()
+				.map(|(_artist, albums_str, count)| {
+					let albums = albums_str.split(',').map(String::from).collect();
+					(_artist, albums, count)
+				})
+				.collect()
+		})
+		.map(process_grouped_items);
 
 	match result {
 		Ok(items) => match serde_json::to_string(&items) {

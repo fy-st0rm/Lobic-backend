@@ -63,13 +63,6 @@ pub async fn browse_artists(State(app_state): State<AppState>, Query(params): Qu
 
 	use crate::schema::music::dsl::*;
 
-	// let result = music
-	// 	.select(artist)
-	// 	.distinct()
-	// 	.select((artist, album))
-	// 	.load::<(String, String)>(&mut db_conn)
-	// 	.map(process_grouped_items);
-
 	let mut query = music.select((artist, album)).distinct().into_boxed();
 	query = query.offset(params.start_index);
 

@@ -4,6 +4,7 @@ use axum::{
 	http::{header, StatusCode},
 	response::Response,
 };
+use diesel::dsl::*;
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::collections::hash_map::DefaultHasher;
@@ -33,13 +34,14 @@ fn generate_image_uuid(artist: &str, album: &str) -> String {
 	Uuid::from_u64_pair(hash, hash).to_string()
 }
 
-fn process_grouped_items(items: Vec<(String, String)>) -> Vec<AlbumResponse> {
+fn process_grouped_items(items: Vec<(String, String, i64)>) -> Vec<AlbumResponse> {
 	let mut album_map: HashMap<String, (i64, String)> = HashMap::new();
-	for (artist, album) in items {
+
+	for (artist, album, count) in items {
 		let entry = album_map
 			.entry(album.clone())
 			.or_insert((0, generate_image_uuid(&artist, &album)));
-		entry.0 += 1;
+		entry.0 = count;
 	}
 
 	album_map
@@ -66,7 +68,16 @@ pub async fn browse_albums(State(app_state): State<AppState>, Query(params): Que
 
 	use crate::schema::music::dsl::*;
 
-	let mut query = music.select((artist, album)).distinct().into_boxed();
+	// Modified query to count distinct music_ids for each album using a subquery
+	let mut query = music
+		.group_by((artist, album))
+		.select((
+			artist,
+			album,
+			sql("COUNT(DISTINCT music_id)").into_sql::<diesel::sql_types::BigInt>(),
+		))
+		.into_boxed();
+
 	query = query.offset(params.start_index);
 
 	if let Some(length) = params.page_length {
@@ -75,7 +86,9 @@ pub async fn browse_albums(State(app_state): State<AppState>, Query(params): Que
 		}
 	}
 
-	let result = query.load::<(String, String)>(&mut db_conn).map(process_grouped_items);
+	let result = query
+		.load::<(String, String, i64)>(&mut db_conn)
+		.map(process_grouped_items);
 
 	match result {
 		Ok(items) => match serde_json::to_string(&items) {

@@ -35,6 +35,7 @@ CREATE TABLE playlists (
 CREATE TABLE playlist_songs (
 	playlist_id TEXT NOT NULL REFERENCES playlists(playlist_id),
 	music_id TEXT NOT NULL REFERENCES music(music_id),
+	song_adder_id TEXT NOT NULL REFERENCES users(user_id), --for combined playlist added by
 	song_added_date_time TEXT NOT NULL,
 	PRIMARY KEY (playlist_id, music_id)
 );

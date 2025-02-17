@@ -2,6 +2,8 @@ use crate::config::{MusicState, OpCode, SocketResponse};
 use crate::core::user_pool::UserPool;
 use crate::lobic_db::db::*;
 use crate::utils::timestamp;
+use crate::lobic_db::models::Notification;
+use crate::routes::notify::notify;
 
 use axum::extract::ws::Message;
 use serde::{Deserialize, Serialize};
@@ -61,6 +63,7 @@ pub struct Lobby {
 	pub chat: Chat,
 	pub music: Music,
 	pub queue: Vec<Music>,
+	pub requested_musics: HashMap<String, Music>,
 }
 
 #[derive(Debug, Clone)]
@@ -122,6 +125,7 @@ impl LobbyPool {
 			chat: Vec::new(),
 			music: Music::new(),
 			queue: Vec::new(),
+			requested_musics: HashMap::new(),
 		};
 		self.insert(&lobby_id, lobby);
 
@@ -308,6 +312,23 @@ impl LobbyPool {
 		};
 
 		lobby.queue = queue;
+		Ok(())
+	}
+
+	pub fn add_requested_music(&self, lobby_id: &str, music: Music, user_pool: &UserPool, db_pool: &DatabasePool) -> Result<(), String> {
+		let mut inner = self.inner.lock().unwrap();
+		let lobby = match inner.get_mut(lobby_id) {
+			Some(lobby) => lobby,
+			None => {
+				return Err(format!("Invalid lobby id: {}", lobby_id));
+			}
+		};
+
+		// Send the host a notification for this
+		let notif = Notification::new(OpCode::REQUEST_MUSIC_PLAY, music.clone().into());
+		notify(&lobby.host_id, notif, db_pool, user_pool);
+
+		lobby.requested_musics.insert(music.id.clone(), music);
 		Ok(())
 	}
 }

@@ -42,6 +42,8 @@ pub enum OpCode {
 	#[allow(non_camel_case_types)]
 	REMOVE_FRIEND,
 	NOTIFICATION,
+	#[allow(non_camel_case_types)]
+	REQUEST_MUSIC_PLAY,
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]

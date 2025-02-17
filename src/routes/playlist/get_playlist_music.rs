@@ -19,6 +19,7 @@ struct MusicQueryResult {
 	album: String,
 	genre: String,
 	song_added_date_time: String,
+	song_adder_id: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -30,6 +31,7 @@ pub struct PlaylistMusicResponse {
 	pub genre: String,
 	pub image_url: String,
 	pub song_added_date_time: String,
+	pub song_adder_id: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -60,6 +62,7 @@ impl PlaylistMusicResponse {
 			genre: result.genre,
 			image_url: img_uuid.to_string(),
 			song_added_date_time: result.song_added_date_time,
+			song_adder_id: result.song_adder_id,
 		}
 	}
 }
@@ -106,6 +109,7 @@ pub async fn get_playlist_music(
 			music::album,
 			music::genre,
 			playlist_songs::song_added_date_time,
+			playlist_songs::song_adder_id,
 		))
 		.load::<MusicQueryResult>(&mut db_conn);
 

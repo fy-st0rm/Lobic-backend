@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 pub struct AddSongToPlaylist {
 	pub playlist_id: String,
 	pub music_id: String,
+	pub song_adder_id: String,
 }
 
 pub async fn add_song_to_playlist(
@@ -33,6 +34,7 @@ pub async fn add_song_to_playlist(
 		playlist_id: payload.playlist_id,
 		music_id: payload.music_id,
 		song_added_date_time: curr_song_added_date_time,
+		song_adder_id: payload.song_adder_id,
 	};
 
 	// Insert the new song into the playlist

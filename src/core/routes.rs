@@ -1,7 +1,7 @@
 use crate::{
 	core::app_state::AppState,
 	routes::{
-		auth::{login::login, logout::logout, signup::signup, verify::verify},
+		auth::{login::login, logout::logout, signup::signup, verify::verify, verify::verify_email, verify::verify_otp},
 		get_lobby::get_lobby,
 		music::{
 			browse_category::{
@@ -59,6 +59,10 @@ pub fn configure_routes(app_state: AppState) -> Router {
 		.route("/login", post(login))
 		.route("/logout", post(logout))
 		.route("/verify", get(verify))
+		// otp
+		.route("/otp/verify", get(verify_otp))
+		// email routes
+		.route("/email/verify/:id", get(verify_email))
 		//base
 		.route("/music/:music_id", get(send_music)) //get actual mp3 music
 		.route("/image/:img_uuid", get(get_cover_image)) //get the png cover image

@@ -43,13 +43,9 @@ pub async fn create_playlist(
 				.unwrap();
 		}
 	};
-
 	use crate::schema::playlists::dsl::*;
-
 	let curr_playlist_id = Uuid::new_v4(); //now a user can create a playlist with the same name
-
 	let curr_creation_date_time = Utc::now().to_rfc3339();
-
 	let new_playlist = Playlist {
 		playlist_id: curr_playlist_id.to_string(),
 		playlist_name: params.playlist_name,

@@ -12,7 +12,7 @@ pub struct PlaylistId {
 }
 
 pub async fn update_playlist_cover_img(Query(playlist_id): Query<PlaylistId>, body: Bytes) -> Response<String> {
-	let user_uuid = match Uuid::parse_str(&playlist_id.playlist_id) {
+	let uuid = match Uuid::parse_str(&playlist_id.playlist_id) {
 		Ok(uuid) => uuid,
 		Err(_) => {
 			return Response::builder()
@@ -30,7 +30,7 @@ pub async fn update_playlist_cover_img(Query(playlist_id): Query<PlaylistId>, bo
 			.unwrap();
 	}
 
-	let image_path = storage_path.join(format!("{}.png", user_uuid));
+	let image_path = storage_path.join(format!("{}.png", uuid));
 	if let Err(err) = fs::write(&image_path, body) {
 		return Response::builder()
 			.status(StatusCode::INTERNAL_SERVER_ERROR)

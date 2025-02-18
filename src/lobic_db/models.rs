@@ -13,6 +13,9 @@ pub struct User {
 	pub username: String,
 	pub email: String,
 	pub pwd_hash: String,
+	pub email_verified: bool,
+	pub otp: String,
+	pub otp_expires_at: String,
 }
 
 #[derive(Insertable, Queryable, Debug)]

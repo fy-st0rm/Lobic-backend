@@ -78,6 +78,9 @@ diesel::table! {
         username -> Text,
         email -> Text,
         pwd_hash -> Text,
+        email_verified -> Bool,
+        otp -> Text,
+        otp_expires_at -> Text,
     }
 }
 

@@ -3,7 +3,10 @@ CREATE TABLE users (
 	user_id TEXT PRIMARY KEY NOT NULL,
 	username TEXT NOT NULL,
 	email TEXT NOT NULL,
-	pwd_hash TEXT NOT NULL
+	pwd_hash TEXT NOT NULL,
+	email_verified BOOLEAN NOT NULL,
+	otp TEXT NOT NULL,
+	otp_expires_at TEXT NOT NULL
 );
 
 CREATE TABLE user_friendship (

@@ -2,7 +2,10 @@ use crate::core::app_state::AppState;
 use crate::lobic_db::models::User;
 use crate::schema::users::dsl::*;
 use crate::utils::{cookie, exp, jwt};
+use crate::mail::otp_mail::otp_mail;
+use crate::mail::mailer::send_mail;
 
+use chrono::{Utc, Duration};
 use axum::{
 	extract::State,
 	http::{header, status::StatusCode},
@@ -13,6 +16,7 @@ use diesel::prelude::*;
 use pwhash::bcrypt;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use rand::Rng;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SignupPayload {
@@ -66,6 +70,14 @@ pub async fn signup(State(app_state): State<AppState>, Json(payload): Json<Signu
 		}
 	}
 
+	// Generate otp
+	let mut rng = rand::rng();
+	let new_otp: i32 = rng.random_range(100_000..1_000_000);
+
+	// Send the otp mail
+	let mail = otp_mail(&payload.email, new_otp);
+	send_mail(mail);
+
 	// Create new user
 	let new_user_id = Uuid::new_v4().to_string();
 	let new_user = User {
@@ -73,6 +85,9 @@ pub async fn signup(State(app_state): State<AppState>, Json(payload): Json<Signu
 		username: payload.username,
 		email: payload.email,
 		pwd_hash: bcrypt::hash(payload.password).unwrap(),
+		email_verified: false,
+		otp: new_otp.to_string(),
+		otp_expires_at: (Utc::now() + Duration::minutes(5)).to_string(),
 	};
 
 	// Insert into the database

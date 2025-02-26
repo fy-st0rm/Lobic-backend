@@ -63,14 +63,15 @@ pub async fn create_playlist(
 			.body(format!("Failed to create directory: {}", err))
 			.unwrap();
 	}
-	let image_path = storage_path.join(format!("{}.png", curr_playlist_id));
-	if let Err(err) = fs::write(&image_path, body) {
-		return Response::builder()
-			.status(StatusCode::INTERNAL_SERVER_ERROR)
-			.body(format!("Failed to save image: {}", err))
-			.unwrap();
+	if !body.is_empty() {
+		let image_path = storage_path.join(format!("{}.png", curr_playlist_id));
+		if let Err(err) = fs::write(&image_path, body) {
+			return Response::builder()
+				.status(StatusCode::INTERNAL_SERVER_ERROR)
+				.body(format!("Failed to save image: {}", err))
+				.unwrap();
+		}
 	}
-
 	match diesel::insert_into(playlists)
 		.values(&new_playlist)
 		.execute(&mut db_conn)

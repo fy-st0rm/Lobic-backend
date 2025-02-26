@@ -40,6 +40,6 @@ pub async fn update_playlist_cover_img(Query(playlist_id): Query<PlaylistId>, bo
 
 	Response::builder()
 		.status(StatusCode::OK)
-		.body("Profile picture updated successfully".to_string())
+		.body("Cover image updated successfully".to_string())
 		.unwrap()
 }

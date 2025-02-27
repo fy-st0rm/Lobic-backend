@@ -1,7 +1,7 @@
 use lettre::Message;
 use lettre::message::SinglePart;
 
-pub fn otp_mail(to: &str, otp: i32) -> Message {
+pub fn otp_mail(to: &str, otp: String) -> Message {
 	let smtp_username = std::env::var("SMTP_USERNAME")
 		.expect("'SMTP_USERNAME' must be set in .env file");
 

@@ -72,10 +72,10 @@ pub async fn signup(State(app_state): State<AppState>, Json(payload): Json<Signu
 
 	// Generate otp
 	let mut rng = rand::rng();
-	let new_otp: i32 = rng.random_range(100_000..1_000_000);
+	let new_otp = rng.random_range(100_000..1_000_000).to_string();
 
 	// Send the otp mail
-	let mail = otp_mail(&payload.email, new_otp);
+	let mail = otp_mail(&payload.email, new_otp.clone());
 	send_mail(mail);
 
 	// Create new user
@@ -86,7 +86,7 @@ pub async fn signup(State(app_state): State<AppState>, Json(payload): Json<Signu
 		email: payload.email,
 		pwd_hash: bcrypt::hash(payload.password).unwrap(),
 		email_verified: false,
-		otp: new_otp.to_string(),
+		otp: new_otp,
 		otp_expires_at: (Utc::now() + Duration::minutes(5)).to_string(),
 	};
 

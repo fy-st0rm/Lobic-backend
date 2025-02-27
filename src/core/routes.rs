@@ -1,7 +1,7 @@
 use crate::{
 	core::app_state::AppState,
 	routes::{
-		auth::{login::login, logout::logout, signup::signup, verify::verify, verify::verify_email, verify::verify_otp},
+		auth::{login::login, logout::logout, signup::signup, verify::verify, verify::verify_email, otp::verify_otp, otp::resend_otp},
 		get_lobby::get_lobby,
 		music::{
 			browse_category::{
@@ -61,6 +61,7 @@ pub fn configure_routes(app_state: AppState) -> Router {
 		.route("/verify", get(verify))
 		// otp
 		.route("/otp/verify", get(verify_otp))
+		.route("/otp/resend/:user_id", get(resend_otp))
 		// email routes
 		.route("/email/verify/:id", get(verify_email))
 		//base

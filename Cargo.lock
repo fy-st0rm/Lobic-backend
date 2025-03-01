@@ -19,6 +19,7 @@ dependencies = [
  "jsonwebtoken",
  "lettre 0.11.13",
  "lettre_email",
+ "mp3-duration",
  "pwhash",
  "rand 0.9.0",
  "rusqlite",
@@ -1436,6 +1437,15 @@ dependencies = [
  "libc",
  "wasi 0.11.0+wasi-snapshot-preview1",
  "windows-sys 0.52.0",
+]
+
+[[package]]
+name = "mp3-duration"
+version = "0.1.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "348bdc7300502f0801e5b57c448815713cd843b744ef9bda252a2698fdf90a0f"
+dependencies = [
+ "thiserror",
 ]
 
 [[package]]

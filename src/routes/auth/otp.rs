@@ -1,19 +1,19 @@
 use crate::core::app_state::AppState;
 use crate::lobic_db::models::User;
-use crate::schema::users;
-use crate::mail::otp_mail::otp_mail;
 use crate::mail::mailer::send_mail;
+use crate::mail::otp_mail::otp_mail;
+use crate::schema::users;
 
-use chrono::{Utc, DateTime, Duration};
 use axum::{
-	extract::{State, Path, Query},
+	extract::{Path, Query, State},
 	http::status::StatusCode,
 	response::Response,
 };
+use chrono::{DateTime, Duration, Utc};
 use diesel::prelude::*;
+use rand::Rng;
 use serde::Deserialize;
 use std::str::FromStr;
-use rand::Rng;
 
 #[derive(Debug, Deserialize)]
 pub struct VerifyOTPQuery {
@@ -99,10 +99,7 @@ pub async fn resend_otp(State(app_state): State<AppState>, Path(user_id): Path<S
 
 	// Making the user verified
 	diesel::update(users::table.filter(users::user_id.eq(&user_id)))
-		.set((
-			users::otp.eq(new_otp.clone()),
-			users::otp_expires_at.eq(exp_time)
-		))
+		.set((users::otp.eq(new_otp.clone()), users::otp_expires_at.eq(exp_time)))
 		.execute(&mut db_conn)
 		.unwrap();
 

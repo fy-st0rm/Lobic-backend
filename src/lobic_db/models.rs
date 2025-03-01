@@ -34,6 +34,7 @@ pub struct Music {
 	pub album: String,
 	pub genre: String,
 	pub times_played: i32,
+	pub duration: i64,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

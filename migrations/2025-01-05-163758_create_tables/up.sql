@@ -22,7 +22,8 @@ CREATE TABLE music (
 	title TEXT NOT NULL,
 	album TEXT NOT NULL,
 	genre TEXT NOT NULL,
-	times_played INTEGER NOT NULL
+	times_played INTEGER NOT NULL,
+	duration BIGINT NOT NULL
 );
 
 -- Playlists

@@ -1,7 +1,7 @@
 use crate::core::app_state::AppState;
-use crate::utils::{cookie, exp, jwt};
 use crate::lobic_db::models::User;
 use crate::schema::users;
+use crate::utils::{cookie, exp, jwt};
 
 use axum::{
 	extract::{Path, State},
@@ -32,8 +32,7 @@ pub async fn verify(jar: CookieJar) -> Response<String> {
 		}
 	};
 
-	let secret_key = std::env::var("JWT_SECRET_KEY")
-		.expect("JWT_SECRET_KEY must be set in .env file");
+	let secret_key = std::env::var("JWT_SECRET_KEY").expect("JWT_SECRET_KEY must be set in .env file");
 
 	// Verifying the access token
 	match jwt::verify(access_token.value(), &secret_key) {
@@ -99,15 +98,13 @@ pub async fn verify_email(State(app_state): State<AppState>, Path(id): Path<Stri
 		}
 	};
 
-	let query = users::table
-		.filter(users::user_id.eq(id))
-		.first::<User>(&mut db_conn);
+	let query = users::table.filter(users::user_id.eq(id)).first::<User>(&mut db_conn);
 
 	let res = match query {
 		Ok(user) => user.email_verified,
 		Err(_) => false,
 	};
-	
+
 	if res {
 		return Response::builder()
 			.status(StatusCode::OK)
@@ -119,5 +116,3 @@ pub async fn verify_email(State(app_state): State<AppState>, Path(id): Path<Stri
 		.body("Email not verified".to_string())
 		.unwrap();
 }
-
-

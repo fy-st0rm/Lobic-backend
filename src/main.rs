@@ -9,10 +9,10 @@ use std::path::Path;
 mod config;
 mod core;
 mod lobic_db;
+mod mail;
 mod routes;
 mod schema;
 mod utils;
-mod mail;
 
 use config::{COVER_IMG_STORAGE, IP, MUSIC_STORAGE, PLAYLIST_COVER_IMG_STORAGE, PORT, USER_PFP_STORAGE};
 use core::{app_state::AppState, migrations::run_migrations};

@@ -1,9 +1,9 @@
 use crate::config::{MusicState, OpCode, SocketResponse};
 use crate::core::user_pool::UserPool;
 use crate::lobic_db::db::*;
-use crate::utils::timestamp;
 use crate::lobic_db::models::Notification;
 use crate::routes::notify::notify;
+use crate::utils::timestamp;
 
 use axum::extract::ws::Message;
 use serde::{Deserialize, Serialize};
@@ -315,7 +315,13 @@ impl LobbyPool {
 		Ok(())
 	}
 
-	pub fn add_requested_music(&self, lobby_id: &str, music: Music, user_pool: &UserPool, db_pool: &DatabasePool) -> Result<(), String> {
+	pub fn add_requested_music(
+		&self,
+		lobby_id: &str,
+		music: Music,
+		user_pool: &UserPool,
+		db_pool: &DatabasePool,
+	) -> Result<(), String> {
 		let mut inner = self.inner.lock().unwrap();
 		let lobby = match inner.get_mut(lobby_id) {
 			Some(lobby) => lobby,

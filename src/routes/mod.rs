@@ -55,9 +55,9 @@ pub mod users {
 pub mod auth {
 	pub mod login;
 	pub mod logout;
+	pub mod otp;
 	pub mod signup;
 	pub mod verify;
-	pub mod otp;
 }
 pub mod get_lobby;
 pub mod notify;

@@ -1,87 +1,88 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
-    liked_songs (user_id, music_id) {
-        user_id -> Text,
-        music_id -> Text,
-        song_added_date_time -> Text,
-    }
+	liked_songs (user_id, music_id) {
+		user_id -> Text,
+		music_id -> Text,
+		song_added_date_time -> Text,
+	}
 }
 
 diesel::table! {
-    music (music_id) {
-        music_id -> Text,
-        artist -> Text,
-        title -> Text,
-        album -> Text,
-        genre -> Text,
-        times_played -> Integer,
-    }
+	music (music_id) {
+		music_id -> Text,
+		artist -> Text,
+		title -> Text,
+		album -> Text,
+		genre -> Text,
+		times_played -> Integer,
+		duration -> BigInt,
+	}
 }
 
 diesel::table! {
-    notifications (id) {
-        id -> Text,
-        user_id -> Text,
-        op_code -> Text,
-        value -> Text,
-    }
+	notifications (id) {
+		id -> Text,
+		user_id -> Text,
+		op_code -> Text,
+		value -> Text,
+	}
 }
 
 diesel::table! {
-    play_log (user_id, music_id) {
-        user_id -> Text,
-        music_id -> Text,
-        music_played_date_time -> Text,
-        user_times_played -> Integer,
-    }
+	play_log (user_id, music_id) {
+		user_id -> Text,
+		music_id -> Text,
+		music_played_date_time -> Text,
+		user_times_played -> Integer,
+	}
 }
 
 diesel::table! {
-    playlist_shares (playlist_id, contributor_user_id) {
-        playlist_id -> Text,
-        contributor_user_id -> Text,
-        is_writable -> Bool,
-    }
+	playlist_shares (playlist_id, contributor_user_id) {
+		playlist_id -> Text,
+		contributor_user_id -> Text,
+		is_writable -> Bool,
+	}
 }
 
 diesel::table! {
-    playlist_songs (playlist_id, music_id) {
-        playlist_id -> Text,
-        music_id -> Text,
-        song_adder_id -> Text,
-        song_added_date_time -> Text,
-    }
+	playlist_songs (playlist_id, music_id) {
+		playlist_id -> Text,
+		music_id -> Text,
+		song_adder_id -> Text,
+		song_added_date_time -> Text,
+	}
 }
 
 diesel::table! {
-    playlists (playlist_id) {
-        playlist_id -> Text,
-        playlist_name -> Text,
-        user_id -> Text,
-        creation_date_time -> Text,
-        last_updated_date_time -> Text,
-        is_playlist_combined -> Bool,
-    }
+	playlists (playlist_id) {
+		playlist_id -> Text,
+		playlist_name -> Text,
+		user_id -> Text,
+		creation_date_time -> Text,
+		last_updated_date_time -> Text,
+		is_playlist_combined -> Bool,
+	}
 }
 
 diesel::table! {
-    user_friendship (user_id, friend_id) {
-        user_id -> Text,
-        friend_id -> Text,
-    }
+	user_friendship (user_id, friend_id) {
+		user_id -> Text,
+		friend_id -> Text,
+	}
 }
 
 diesel::table! {
-    users (user_id) {
-        user_id -> Text,
-        username -> Text,
-        email -> Text,
-        pwd_hash -> Text,
-        email_verified -> Bool,
-        otp -> Text,
-        otp_expires_at -> Text,
-    }
+	users (user_id) {
+		user_id -> Text,
+		username -> Text,
+		email -> Text,
+		pwd_hash -> Text,
+		email_verified -> Bool,
+		otp -> Text,
+		otp_expires_at -> Text,
+	}
 }
 
 diesel::joinable!(liked_songs -> music (music_id));
@@ -97,13 +98,13 @@ diesel::joinable!(playlist_songs -> users (song_adder_id));
 diesel::joinable!(playlists -> users (user_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
-    liked_songs,
-    music,
-    notifications,
-    play_log,
-    playlist_shares,
-    playlist_songs,
-    playlists,
-    user_friendship,
-    users,
+	liked_songs,
+	music,
+	notifications,
+	play_log,
+	playlist_shares,
+	playlist_songs,
+	playlists,
+	user_friendship,
+	users,
 );

@@ -1,7 +1,10 @@
 use crate::{
 	core::app_state::AppState,
 	routes::{
-		auth::{login::login, logout::logout, signup::signup, verify::verify, verify::verify_email, otp::verify_otp, otp::resend_otp},
+		auth::{
+			login::login, logout::logout, otp::resend_otp, otp::verify_otp, signup::signup, verify::verify,
+			verify::verify_email,
+		},
 		get_lobby::get_lobby,
 		music::{
 			browse_category::{

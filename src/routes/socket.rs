@@ -65,7 +65,9 @@ pub async fn handle_socket(socket: WebSocket, State(app_state): State<AppState>)
 					OpCode::SYNC_MUSIC => handle_sync_music(payload.value, &lobby_pool),
 					OpCode::SET_QUEUE => handle_set_queue(payload.value, &lobby_pool, &user_pool),
 					OpCode::SYNC_QUEUE => handle_sync_queue(payload.value, &lobby_pool),
-					OpCode::REQUEST_MUSIC_PLAY => handle_request_music_play(payload.value, &lobby_pool, &user_pool, &db_pool),
+					OpCode::REQUEST_MUSIC_PLAY => {
+						handle_request_music_play(payload.value, &lobby_pool, &user_pool, &db_pool)
+					}
 					_ => Err(format!("Invalid opcode: {:?}", payload.op_code)),
 				};
 
@@ -559,7 +561,12 @@ struct RequestMusicPlayPayload {
 	pub music: Music,
 }
 
-fn handle_request_music_play(value: Value, lobby_pool: &LobbyPool, user_pool: &UserPool, db_pool: &DatabasePool) -> Result<SocketResponse, String> {
+fn handle_request_music_play(
+	value: Value,
+	lobby_pool: &LobbyPool,
+	user_pool: &UserPool,
+	db_pool: &DatabasePool,
+) -> Result<SocketResponse, String> {
 	let payload: RequestMusicPlayPayload = serde_json::from_value(value).map_err(|x| x.to_string())?;
 	lobby_pool.add_requested_music(&payload.lobby_id, payload.music, user_pool, db_pool)?;
 
@@ -571,5 +578,3 @@ fn handle_request_music_play(value: Value, lobby_pool: &LobbyPool, user_pool: &U
 
 	Ok(response)
 }
-
-

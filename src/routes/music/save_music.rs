@@ -112,7 +112,9 @@ fn is_music_file(path: &Path) -> bool {
 
 fn process_music_file(path: &Path, db_conn: &mut SqliteConnection) -> Result<(), Box<dyn std::error::Error>> {
 	let path_str = path.to_str().ok_or("Invalid path")?;
-	let tag = Tag::read_from_path(path_str).unwrap_or_default();
+
+	// Read ID3 tags
+	let tag = Tag::read_from_path(path_str).unwrap_or_else(|_| Tag::new());
 
 	let curr_artist = tag.artist().unwrap_or("Unknown Artist");
 	let curr_title = tag.title().unwrap_or("Unknown Title");
@@ -129,6 +131,10 @@ fn process_music_file(path: &Path, db_conn: &mut SqliteConnection) -> Result<(),
 	// Copy the music file to the new location
 	fs::copy(path, &new_file_path)?;
 
+	let file = fs::File::open(path_str)?;
+	let duration_u64 = mp3_duration::from_file(&file)?.as_secs();
+	let curr_duration = i64::try_from(duration_u64)?; // Convert u64 to i64, will error if too large
+
 	let curr_music = Music {
 		music_id: curr_music_id.to_string(),
 		artist: curr_artist.to_string(),
@@ -136,6 +142,7 @@ fn process_music_file(path: &Path, db_conn: &mut SqliteConnection) -> Result<(),
 		album: curr_album.to_string(),
 		genre: tag.genre().unwrap_or("Unknown Genre").to_string(),
 		times_played: 0,
+		duration: curr_duration,
 	};
 
 	extract_cover_art(path_str, &curr_artist, &curr_album)?;

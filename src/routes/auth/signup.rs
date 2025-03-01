@@ -1,22 +1,22 @@
 use crate::core::app_state::AppState;
 use crate::lobic_db::models::User;
+use crate::mail::mailer::send_mail;
+use crate::mail::otp_mail::otp_mail;
 use crate::schema::users::dsl::*;
 use crate::utils::{cookie, exp, jwt};
-use crate::mail::otp_mail::otp_mail;
-use crate::mail::mailer::send_mail;
 
-use chrono::{Utc, Duration};
 use axum::{
 	extract::State,
 	http::{header, status::StatusCode},
 	response::Response,
 	Json,
 };
+use chrono::{Duration, Utc};
 use diesel::prelude::*;
 use pwhash::bcrypt;
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use rand::Rng;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SignupPayload {

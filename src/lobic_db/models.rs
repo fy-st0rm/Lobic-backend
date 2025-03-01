@@ -45,6 +45,7 @@ pub struct MusicResponse {
 	pub album: String,
 	pub genre: String,
 	pub times_played: i32,
+	pub duration: i64,
 	pub image_url: String,
 }
 

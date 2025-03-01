@@ -118,6 +118,7 @@ pub async fn search_music(State(app_state): State<AppState>, Query(params): Quer
 				album: entry.album,
 				genre: entry.genre,
 				times_played: entry.times_played,
+				duration: entry.duration,
 				image_url: img_uuid.to_string(),
 			}
 		})

@@ -77,6 +77,7 @@ pub async fn get_top_tracks(
 						album: entry.album,
 						genre: entry.genre,
 						times_played: entry.times_played,
+						duration: entry.duration,
 						image_url: img_uuid.to_string(),
 					}
 				})

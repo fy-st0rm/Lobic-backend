@@ -18,11 +18,6 @@ pub struct LogSongPlay {
 const MAX_RETRIES: u32 = 3;
 
 pub async fn log_song_play(State(app_state): State<AppState>, Json(payload): Json<LogSongPlay>) -> impl IntoResponse {
-	// Validate music_id format
-	if !is_valid_music_id(&payload.music_id) {
-		return (StatusCode::BAD_REQUEST, "Invalid music ID format").into_response();
-	}
-
 	// Get database connection from pool
 	let mut db_conn = match app_state.db_pool.get() {
 		Ok(conn) => conn,
@@ -92,9 +87,4 @@ pub async fn log_song_play(State(app_state): State<AppState>, Json(payload): Jso
 				.into_response()
 		}
 	}
-}
-
-// Helper function to validate music_id format
-fn is_valid_music_id(id: &str) -> bool {
-	!id.is_empty() && id.len() < 100 && id.chars().all(|c| c.is_alphanumeric() || c == '-' || c == '_')
 }

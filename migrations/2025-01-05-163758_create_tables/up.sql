@@ -75,3 +75,6 @@ CREATE TABLE notifications(
 	op_code TEXT NOT NULL,
 	value TEXT NOT NULL
 );
+
+CREATE INDEX IF NOT EXISTS idx_play_log_user_music ON play_log(user_id, music_id);
+CREATE INDEX IF NOT EXISTS idx_music_id ON music(music_id); 

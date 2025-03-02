@@ -1,6 +1,6 @@
 use crate::core::app_state::AppState;
 use crate::lobic_db::models::{Music, MusicResponse, Playlist, User, UserDataResponse};
-use crate::schema::{music, users};
+use crate::schema::{music, playlists, users};
 use axum::{
 	extract::{Query, State},
 	http::{header, StatusCode},
@@ -39,6 +39,58 @@ pub async fn search(State(app_state): State<AppState>, Query(params): Query<Sear
 	let category = params.search_category.to_lowercase();
 	let search_string = params.search_string.to_lowercase();
 	let response = match category.as_str() {
+		"all" => {
+			// Define a constant limit for all searches
+			const SEARCH_LIMIT: i64 = 10;
+
+			// Search music with limit
+			let music_results = music::table
+				.filter(
+					music::title
+						.like(format!("%{}%", search_string))
+						.or(music::album.like(format!("%{}%", search_string)))
+						.or(music::artist.like(format!("%{}%", search_string))),
+				)
+				.limit(SEARCH_LIMIT)
+				.load::<Music>(&mut db_conn)
+				.map(|entries| {
+					entries
+						.into_iter()
+						.map(Music::create_music_response)
+						.collect::<Vec<_>>()
+				})
+				.unwrap_or_else(|_| vec![]);
+
+			// Search users with limit
+			let people_results = users::table
+				.filter(users::username.like(format!("%{}%", search_string)))
+				.limit(SEARCH_LIMIT)
+				.load::<User>(&mut db_conn)
+				.map(|entries| {
+					entries
+						.into_iter()
+						.map(|entry| UserDataResponse {
+							user_id: entry.user_id,
+							username: entry.username,
+							email: entry.email,
+						})
+						.collect::<Vec<_>>()
+				})
+				.unwrap_or_else(|_| vec![]);
+
+			// Search playlists with limit
+			let playlist_results = playlists::table
+				.filter(playlists::playlist_name.like(format!("%{}%", search_string)))
+				.limit(SEARCH_LIMIT)
+				.load::<Playlist>(&mut db_conn)
+				.unwrap_or_else(|_| vec![]);
+
+			SearchResponse {
+				songs: music_results,
+				people: people_results,
+				playlists: playlist_results,
+			}
+		}
 		"title" | "album" | "artist" => {
 			let all_music = match music::table.load::<Music>(&mut db_conn) {
 				Ok(entries) => entries,
@@ -113,6 +165,47 @@ pub async fn search(State(app_state): State<AppState>, Query(params): Query<Sear
 				playlists: vec![],
 			}
 		}
+		"playlists" => {
+			let all_playlists = match playlists::table.load::<Playlist>(&mut db_conn) {
+				Ok(entries) => entries,
+				Err(err) => {
+					return Response::builder()
+						.status(StatusCode::INTERNAL_SERVER_ERROR)
+						.body(format!("Database error: {err}"))
+						.unwrap();
+				}
+			};
+			let search_results = all_playlists
+				.into_iter()
+				.map(|entry| {
+					let (score, exact_match) = calculate_playlist_score(&entry, &search_string);
+					let weighted_score = if exact_match { 10000.0 } else { score };
+					(entry, weighted_score)
+				})
+				.filter(|(_, score)| *score > 6.0)
+				.collect::<Vec<_>>();
+
+			let mut sorted_results = search_results;
+			sorted_results.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(Ordering::Equal));
+
+			let playlist_response = sorted_results
+				.into_iter()
+				.map(|(entry, _)| Playlist {
+					playlist_id: entry.playlist_id,
+					playlist_name: entry.playlist_name,
+					user_id: entry.user_id,
+					creation_date_time: entry.creation_date_time,
+					last_updated_date_time: entry.last_updated_date_time,
+					is_playlist_combined: entry.is_playlist_combined,
+				})
+				.collect();
+
+			SearchResponse {
+				songs: vec![],
+				people: vec![],
+				playlists: playlist_response,
+			}
+		}
 		_ => {
 			return Response::builder()
 				.status(StatusCode::BAD_REQUEST)
@@ -169,5 +262,14 @@ fn calculate_people_score(entry: &User, search_string: &str) -> (f64, bool) {
 	let exact = entry.username.eq_ignore_ascii_case(search_string);
 	let similarity = jaro_winkler(&entry.username, search_string);
 	let contains_bonus = contains_search_term(&entry.username) * 0.75;
+	(similarity * 12.0 + contains_bonus, exact)
+}
+
+fn calculate_playlist_score(entry: &Playlist, search_string: &str) -> (f64, bool) {
+	let search_term = search_string.to_lowercase();
+	let contains_search_term = |field: &str| -> f64 { field.to_lowercase().contains(&search_term) as i32 as f64 * 8.0 };
+	let exact = entry.playlist_name.eq_ignore_ascii_case(search_string);
+	let similarity = jaro_winkler(&entry.playlist_name, search_string);
+	let contains_bonus = contains_search_term(&entry.playlist_name) * 0.75;
 	(similarity * 12.0 + contains_bonus, exact)
 }

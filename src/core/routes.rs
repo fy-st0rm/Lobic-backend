@@ -2,8 +2,11 @@ use crate::{
 	core::app_state::AppState,
 	routes::{
 		auth::{
-			login::login, logout::logout, otp::resend_otp, otp::verify_otp, signup::signup, verify::verify,
-			verify::verify_email,
+			login::login,
+			logout::logout,
+			otp::{resend_otp, verify_otp},
+			signup::signup,
+			verify::{verify, verify_email},
 		},
 		get_lobby::get_lobby,
 		music::{
@@ -39,6 +42,7 @@ use crate::{
 			remove_song_from_playlist::remove_song_from_playlist,
 			update_playlist_cover_img::update_playlist_cover_img,
 		},
+		search::search,
 		socket::websocket_handler,
 		users::{
 			add_friend::add_friend, get_user::get_user, get_user_data::get_user_data, get_user_pfp::get_user_pfp,
@@ -62,6 +66,7 @@ pub fn configure_routes(app_state: AppState) -> Router {
 		.route("/login", post(login))
 		.route("/logout", post(logout))
 		.route("/verify", get(verify))
+		.route("/search", get(search))
 		// otp
 		.route("/otp/verify", get(verify_otp))
 		.route("/otp/resend/:user_id", get(resend_otp))
@@ -71,7 +76,7 @@ pub fn configure_routes(app_state: AppState) -> Router {
 		.route("/music/:music_id", get(send_music)) //get actual mp3 music
 		.route("/image/:img_uuid", get(get_cover_image)) //get the png cover image
 		//music data
-		.route("/search", get(search_music))
+		.route("/search_music", get(search_music))
 		.route("/music/get_music", get(get_music))
 		//browse category
 		.route("/music/browse_artists", get(browse_artists)) //returns Vec<artist, song_count ,Vec<image_uuid>>/ the image_uuids is capped to 4

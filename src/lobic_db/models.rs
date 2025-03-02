@@ -22,7 +22,7 @@ pub struct User {
 
 #[derive(Serialize, Deserialize)]
 pub struct UserDataResponse {
-	pub id: String,
+	pub user_id: String,
 	pub username: String,
 	pub email: String,
 }
@@ -150,7 +150,6 @@ impl Music {
 		}
 	}
 }
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct MusicResponse {
 	pub id: String,

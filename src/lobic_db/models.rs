@@ -1,3 +1,5 @@
+use std::hash::{DefaultHasher, Hash, Hasher};
+
 use crate::config::OpCode;
 use crate::schema::*;
 
@@ -18,35 +20,18 @@ pub struct User {
 	pub otp_expires_at: String,
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct UserDataResponse {
+	pub id: String,
+	pub username: String,
+	pub email: String,
+}
+
 #[derive(Insertable, Queryable, Debug)]
 #[diesel(table_name = user_friendship)]
 pub struct UserFriendship {
 	pub user_id: String,
 	pub friend_id: String,
-}
-
-#[derive(Insertable, Queryable, Debug, Selectable, Serialize, Deserialize)]
-#[diesel(table_name = music)]
-pub struct Music {
-	pub music_id: String,
-	pub artist: String,
-	pub title: String,
-	pub album: String,
-	pub genre: String,
-	pub times_played: i32,
-	pub duration: i64,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct MusicResponse {
-	pub id: String,
-	pub artist: String,
-	pub title: String,
-	pub album: String,
-	pub genre: String,
-	pub times_played: i32,
-	pub duration: i64,
-	pub image_url: String,
 }
 
 #[derive(Insertable, Queryable, Debug, Selectable, Serialize, Deserialize)]
@@ -133,4 +118,47 @@ impl From<Notification> for Value {
 	fn from(notif: Notification) -> Self {
 		serde_json::to_value(&notif).unwrap()
 	}
+}
+
+#[derive(Insertable, Queryable, Debug, Selectable, Serialize, Deserialize)]
+#[diesel(table_name = music)]
+pub struct Music {
+	pub music_id: String,
+	pub artist: String,
+	pub title: String,
+	pub album: String,
+	pub genre: String,
+	pub times_played: i32,
+	pub duration: i64,
+}
+impl Music {
+	pub fn create_music_response(entry: Music) -> MusicResponse {
+		let mut hasher = DefaultHasher::new();
+		entry.artist.hash(&mut hasher);
+		entry.album.hash(&mut hasher);
+		let hash = hasher.finish();
+		let img_uuid = Uuid::from_u64_pair(hash, hash);
+		MusicResponse {
+			id: entry.music_id.clone(),
+			artist: entry.artist,
+			title: entry.title,
+			album: entry.album,
+			genre: entry.genre,
+			times_played: entry.times_played,
+			duration: entry.duration,
+			image_url: img_uuid.to_string(),
+		}
+	}
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct MusicResponse {
+	pub id: String,
+	pub artist: String,
+	pub title: String,
+	pub album: String,
+	pub genre: String,
+	pub times_played: i32,
+	pub duration: i64,
+	pub image_url: String,
 }

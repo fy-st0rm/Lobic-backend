@@ -51,7 +51,7 @@ pub mod users {
 	pub mod search_user;
 	pub mod update_pfp;
 }
-
+pub mod search;
 pub mod auth {
 	pub mod login;
 	pub mod logout;

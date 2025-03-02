@@ -1,5 +1,3 @@
-use std::hash::{DefaultHasher, Hash, Hasher};
-
 use crate::{
 	core::app_state::AppState,
 	lobic_db::models::{Music, MusicResponse},
@@ -11,7 +9,6 @@ use axum::{
 };
 use diesel::prelude::*;
 use serde::Deserialize;
-use uuid::Uuid;
 
 use crate::schema::{liked_songs, music};
 
@@ -66,25 +63,7 @@ pub async fn get_liked_songs(
 
 			let responses: Vec<MusicResponse> = music_entries
 				.into_iter()
-				.map(|entry| {
-					// Generate image URL based on artist and album
-					let mut hasher = DefaultHasher::new();
-					entry.artist.hash(&mut hasher);
-					entry.album.hash(&mut hasher);
-					let hash = hasher.finish();
-					let img_uuid = Uuid::from_u64_pair(hash, hash);
-
-					MusicResponse {
-						id: entry.music_id,
-						artist: entry.artist,
-						title: entry.title,
-						album: entry.album,
-						genre: entry.genre,
-						times_played: entry.times_played,
-						duration: entry.duration,
-						image_url: img_uuid.to_string(),
-					}
-				})
+				.map(|entry| Music::create_music_response(entry))
 				.collect();
 
 			match serde_json::to_string(&responses) {

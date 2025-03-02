@@ -1,6 +1,5 @@
 use crate::core::app_state::AppState;
 use crate::lobic_db::models::Music;
-use crate::lobic_db::models::MusicResponse;
 use axum::{
 	extract::{Query, State},
 	http::{header, StatusCode},
@@ -10,9 +9,6 @@ use diesel::prelude::*;
 use serde::Deserialize;
 use std::cmp::Ordering;
 use strsim::jaro_winkler;
-
-use std::{collections::hash_map::DefaultHasher, hash::Hash, hash::Hasher};
-use uuid::Uuid;
 
 #[derive(Deserialize)]
 pub struct SearchQuery {
@@ -105,23 +101,7 @@ pub async fn search_music(State(app_state): State<AppState>, Query(params): Quer
 		.into_iter()
 		.skip(params.start_index)
 		.take(params.page_length.unwrap_or(10))
-		.map(|(entry, _)| {
-			let mut hasher = DefaultHasher::new();
-			entry.artist.hash(&mut hasher);
-			entry.album.hash(&mut hasher);
-			let hash = hasher.finish();
-			let img_uuid = Uuid::from_u64_pair(hash, hash);
-			MusicResponse {
-				id: entry.music_id,
-				artist: entry.artist,
-				title: entry.title,
-				album: entry.album,
-				genre: entry.genre,
-				times_played: entry.times_played,
-				duration: entry.duration,
-				image_url: img_uuid.to_string(),
-			}
-		})
+		.map(|(entry, _)| Music::create_music_response(entry))
 		.collect::<Vec<_>>();
 
 	// Return the results as JSON

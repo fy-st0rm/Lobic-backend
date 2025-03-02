@@ -1,4 +1,8 @@
-use crate::{core::app_state::AppState, lobic_db::models::MusicResponse};
+use crate::{
+	core::app_state::AppState,
+	lobic_db::models::{Music, MusicResponse},
+	schema::{music, play_log},
+};
 use axum::{
 	extract::{Query, State},
 	http::{header, StatusCode},
@@ -7,12 +11,6 @@ use axum::{
 use diesel::prelude::*;
 use serde::Deserialize;
 
-use std::{collections::hash_map::DefaultHasher, hash::Hash, hash::Hasher};
-use uuid::Uuid;
-
-use crate::lobic_db::models::Music;
-use crate::schema::{music, play_log};
-// /music/get_recently_played?user_id=123&start_index=10&page_length=20
 // /music/get_recently_played?user_id=123&page_length=20
 // /music/get_recently_played?user_id=123
 #[derive(Debug, Deserialize)]
@@ -61,25 +59,7 @@ pub async fn get_recently_played(
 
 			let responses: Vec<MusicResponse> = music_entries
 				.into_iter()
-				.map(|entry| {
-					// Generate image URL based on artist and album
-					let mut hasher = DefaultHasher::new();
-					entry.artist.hash(&mut hasher);
-					entry.album.hash(&mut hasher);
-					let hash = hasher.finish();
-					let img_uuid = Uuid::from_u64_pair(hash, hash);
-
-					MusicResponse {
-						id: entry.music_id,
-						artist: entry.artist,
-						title: entry.title,
-						album: entry.album,
-						genre: entry.genre,
-						times_played: entry.times_played,
-						duration: entry.duration,
-						image_url: img_uuid.to_string(),
-					}
-				})
+				.map(|entry| Music::create_music_response(entry))
 				.collect();
 
 			match serde_json::to_string(&responses) {

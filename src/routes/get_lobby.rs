@@ -58,7 +58,7 @@ pub async fn get_lobby(State(app_state): State<AppState>, Path(lobby_id): Path<S
 	let response = GetLobbyResponse {
 		id: lobby_id,
 		lobby_name: format!("{}'s Lobby", user.username),
-		lobby_icon: format!("{}:{}/image/{}.png", IP, PORT, user.user_id),
+		lobby_icon: lobby.music.image_url,
 		listeners: lobby.clients.len() as i32,
 		song_name: lobby.music.title,
 		artist_name: lobby.music.artist,

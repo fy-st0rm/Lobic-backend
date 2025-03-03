@@ -31,7 +31,7 @@ pub struct Music {
 	pub id: String,
 	pub title: String,
 	pub artist: String,
-	pub cover_img: String,
+	pub image_url: String,
 	pub timestamp: f64,
 	pub state: MusicState,
 }
@@ -42,7 +42,7 @@ impl Music {
 			id: String::new(),
 			title: String::new(),
 			artist: String::new(),
-			cover_img: String::new(),
+			image_url: String::new(),
 			timestamp: 0.0,
 			state: MusicState::PAUSE,
 		}

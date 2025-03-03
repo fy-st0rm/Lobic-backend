@@ -392,7 +392,7 @@ struct SetMusicStatePayload {
 	pub music_id: String,
 	pub title: String,
 	pub artist: String,
-	pub cover_img: String,
+	pub image_url: String,
 	pub timestamp: f64,
 	pub state: MusicState,
 }
@@ -408,7 +408,7 @@ fn handle_set_music_state(
 		id: payload.music_id,
 		title: payload.title,
 		artist: payload.artist,
-		cover_img: payload.cover_img,
+		image_url: payload.image_url,
 		timestamp: payload.timestamp,
 		state: payload.state,
 	};

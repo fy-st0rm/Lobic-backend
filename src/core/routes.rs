@@ -112,10 +112,10 @@ pub fn configure_routes(app_state: AppState) -> Router {
 		.route("/user/update_pfp", post(update_pfp)) // @TODO :support non png image
 		.route("/user/get_pfp/:filename", get(get_user_pfp)) // @TODO : support non png
 		.route("/user/get_user_data/:user_uuid", get(get_user_data))
-		//friends stuff
-		.route("/add_friend", post(add_friend))
-		.route("/remove_friend", post(remove_friend))
 		.route("/user/search", get(search_user))
+		//friends stuff
+		.route("/friend/add", post(add_friend))
+		.route("/friend/remove", post(remove_friend))
 		//notification
 		.route("/notif/get/:client_id", get(get_all_notif))
 		.route("/notif/delete/:notif_id", post(remove_notif))

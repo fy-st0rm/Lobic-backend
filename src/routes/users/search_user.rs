@@ -15,10 +15,10 @@ use std::path::Path;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SearchUserResponse {
-	pub user_id: String,
+	pub id: String,
 	pub username: String,
 	pub email: String,
-	pub pfp: Option<String>,
+	pub pfp: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -61,14 +61,11 @@ pub async fn search_user(State(app_state): State<AppState>, Query(params): Query
 	let results: Vec<SearchUserResponse> = matches
 		.into_iter()
 		.map(|entry| {
-			let pfp = format!("{USER_PFP_STORAGE}/{}.png", entry.user_id);
-			let has_pfp = Path::new(&pfp).is_file();
-
 			SearchUserResponse {
-				user_id: entry.user_id,
+				id: entry.user_id.clone(),
 				username: entry.username,
 				email: entry.email,
-				pfp: has_pfp.then_some(pfp),
+				pfp: entry.user_id,
 			}
 		})
 		.collect::<Vec<_>>();

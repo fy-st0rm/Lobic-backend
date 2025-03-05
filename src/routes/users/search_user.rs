@@ -1,4 +1,3 @@
-use crate::config::USER_PFP_STORAGE;
 use crate::core::app_state::AppState;
 use crate::lobic_db::models::User;
 use crate::schema::users::dsl::*;
@@ -11,7 +10,6 @@ use axum::{
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use std::path::Path;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SearchUserResponse {

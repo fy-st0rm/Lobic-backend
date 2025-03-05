@@ -45,7 +45,7 @@ use crate::{
 		search::search,
 		socket::websocket_handler,
 		users::{
-			add_friend::add_friend, get_user::get_user, get_user_data::get_user_data, get_user_pfp::get_user_pfp,
+			add_friend::add_friend, get_friend::get_friend, get_user::get_user, get_user_data::get_user_data, get_user_pfp::get_user_pfp,
 			remove_friend::remove_friend, search_user::search_user, update_pfp::update_pfp,
 		},
 	},
@@ -116,6 +116,7 @@ pub fn configure_routes(app_state: AppState) -> Router {
 		//friends stuff
 		.route("/friend/add", post(add_friend))
 		.route("/friend/remove", post(remove_friend))
+		.route("/friend/get/:user_id", get(get_friend))
 		//notification
 		.route("/notif/get/:client_id", get(get_all_notif))
 		.route("/notif/delete/:notif_id", post(remove_notif))

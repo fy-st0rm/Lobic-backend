@@ -43,11 +43,12 @@ pub mod playlist {
 	}
 }
 pub mod users {
-	pub mod add_friend;
 	pub mod get_user;
 	pub mod get_user_data;
 	pub mod get_user_pfp;
+	pub mod add_friend;
 	pub mod remove_friend;
+	pub mod get_friend;
 	pub mod search_user;
 	pub mod update_pfp;
 }

@@ -4,9 +4,10 @@ use crate::{
 		auth::{
 			login::login,
 			logout::logout,
-			otp::{resend_otp, verify_otp},
+			otp::{resend_otp, verify_otp, is_verified},
 			signup::signup,
 			verify::{verify, verify_email},
+			change_password::change_password,
 		},
 		get_lobby::get_lobby,
 		music::{
@@ -67,8 +68,10 @@ pub fn configure_routes(app_state: AppState) -> Router {
 		.route("/logout", post(logout))
 		.route("/verify", get(verify))
 		.route("/search", get(search))
+		.route("/change_password", post(change_password))
 		// otp
-		.route("/otp/verify", get(verify_otp))
+		.route("/otp/verify/:user_id", get(is_verified))
+		.route("/otp/verify", post(verify_otp))
 		.route("/otp/resend/:user_id", get(resend_otp))
 		// email routes
 		.route("/email/verify/:id", get(verify_email))
@@ -111,7 +114,7 @@ pub fn configure_routes(app_state: AppState) -> Router {
 		//user stuff
 		.route("/user/update_pfp", post(update_pfp)) // @TODO :support non png image
 		.route("/user/get_pfp/:filename", get(get_user_pfp)) // @TODO : support non png
-		.route("/user/get_user_data/:user_uuid", get(get_user_data))
+		.route("/user/get_user_data", get(get_user_data))
 		.route("/user/search", get(search_user))
 		//friends stuff
 		.route("/friend/add", post(add_friend))

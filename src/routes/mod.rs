@@ -59,6 +59,7 @@ pub mod auth {
 	pub mod otp;
 	pub mod signup;
 	pub mod verify;
+	pub mod change_password;
 }
 pub mod get_lobby;
 pub mod notify;

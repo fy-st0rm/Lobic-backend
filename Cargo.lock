@@ -8,6 +8,7 @@ version = "0.1.0"
 dependencies = [
  "axum",
  "axum-extra",
+ "axum-macros",
  "chrono",
  "colored",
  "cookie",
@@ -196,6 +197,17 @@ dependencies = [
  "tower",
  "tower-layer",
  "tower-service",
+]
+
+[[package]]
+name = "axum-macros"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "604fde5e028fea851ce1d8570bbdc034bec850d157f7569d10f347d06808c05c"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]

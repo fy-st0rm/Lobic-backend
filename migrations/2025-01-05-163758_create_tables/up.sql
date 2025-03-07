@@ -6,7 +6,8 @@ CREATE TABLE users (
 	pwd_hash TEXT NOT NULL,
 	email_verified BOOLEAN NOT NULL,
 	otp TEXT NOT NULL,
-	otp_expires_at TEXT NOT NULL
+	otp_expires_at TEXT NOT NULL,
+	otp_verified TEXT
 );
 
 CREATE TABLE user_friendship (

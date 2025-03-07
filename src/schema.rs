@@ -82,6 +82,7 @@ diesel::table! {
         email_verified -> Bool,
         otp -> Text,
         otp_expires_at -> Text,
+        otp_verified -> Nullable<Text>,
     }
 }
 

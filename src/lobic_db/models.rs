@@ -18,6 +18,7 @@ pub struct User {
 	pub email_verified: bool,
 	pub otp: String,
 	pub otp_expires_at: String,
+	pub otp_verified: Option<String>,
 }
 
 #[derive(Serialize, Deserialize)]

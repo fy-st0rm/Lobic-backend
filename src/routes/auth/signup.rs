@@ -88,6 +88,7 @@ pub async fn signup(State(app_state): State<AppState>, Json(payload): Json<Signu
 		email_verified: false,
 		otp: new_otp,
 		otp_expires_at: (Utc::now() + Duration::minutes(5)).to_string(),
+		otp_verified: None,
 	};
 
 	// Insert into the database

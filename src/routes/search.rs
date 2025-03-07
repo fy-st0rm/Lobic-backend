@@ -109,7 +109,7 @@ pub async fn search(State(app_state): State<AppState>, Query(params): Query<Sear
 					let weighted_score = if exact_match { 10000.0 } else { score };
 					(entry, weighted_score)
 				})
-				.filter(|(_, score)| *score > 6.0)
+				.filter(|(_, score)| *score > 9.0)
 				.collect::<Vec<_>>();
 
 			let mut sorted_results = search_results;
@@ -144,7 +144,7 @@ pub async fn search(State(app_state): State<AppState>, Query(params): Query<Sear
 					let weighted_score = if exact_match { 10000.0 } else { score };
 					(entry, weighted_score)
 				})
-				.filter(|(_, score)| *score > 6.0)
+				.filter(|(_, score)| *score > 12.0)
 				.collect::<Vec<_>>();
 
 			let mut sorted_results = search_results;

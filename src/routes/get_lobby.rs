@@ -1,4 +1,3 @@
-use crate::config::{IP, PORT};
 use crate::core::app_state::AppState;
 use crate::lobic_db::models::User;
 use crate::schema::users::dsl::*;

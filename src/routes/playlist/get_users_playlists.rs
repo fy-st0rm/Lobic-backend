@@ -1,5 +1,7 @@
 use crate::core::app_state::AppState;
 use crate::lobic_db::models::Playlist;
+use crate::lobic_db::models::PlaylistInfo;
+use crate::lobic_db::models::UserPlaylistsResponse;
 use axum::{extract::Query, extract::State, http::status::StatusCode, response::Response};
 use diesel::prelude::*;
 use serde::Deserialize;
@@ -8,21 +10,6 @@ use serde::Serialize;
 #[derive(Debug, Serialize)]
 pub struct ApiResponse {
 	pub message: String,
-}
-
-#[derive(Debug, Serialize)]
-pub struct PlaylistInfo {
-	pub playlist_id: String,
-	pub playlist_name: String,
-	pub creation_date_time: String,
-	pub last_updated_date_time: String,
-	pub is_playlist_combined: bool,
-}
-
-#[derive(Debug, Serialize)]
-pub struct UserPlaylistsResponse {
-	pub user_id: String,
-	pub playlists: Vec<PlaylistInfo>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -69,6 +56,7 @@ pub async fn get_users_playlists(
 				let playlists_info: Vec<PlaylistInfo> = user_playlists
 					.into_iter()
 					.map(|playlist| PlaylistInfo {
+						user_id: playlist.user_id,
 						playlist_id: playlist.playlist_id,
 						playlist_name: playlist.playlist_name,
 						creation_date_time: playlist.creation_date_time,

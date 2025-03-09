@@ -1,5 +1,5 @@
 use crate::core::app_state::AppState;
-use crate::lobic_db::models::{Music, MusicResponse, Playlist, User, UserDataResponse};
+use crate::lobic_db::models::{Music, MusicResponse, Playlist, PlaylistInfo, User, UserDataResponse};
 use crate::schema::{music, playlists, users};
 use axum::{
 	extract::{Query, State},
@@ -21,7 +21,7 @@ pub struct SearchQuery {
 pub struct SearchResponse {
 	songs: Vec<MusicResponse>,
 	people: Vec<UserDataResponse>,
-	playlists: Vec<Playlist>,
+	playlists: Vec<PlaylistInfo>,
 }
 
 pub async fn search(State(app_state): State<AppState>, Query(params): Query<SearchQuery>) -> Response<String> {
@@ -84,11 +84,22 @@ pub async fn search(State(app_state): State<AppState>, Query(params): Query<Sear
 				.limit(SEARCH_LIMIT)
 				.load::<Playlist>(&mut db_conn)
 				.unwrap_or_else(|_| vec![]);
+			let playlists_response = playlist_results
+				.into_iter()
+				.map(|playlist| PlaylistInfo {
+					playlist_id: playlist.playlist_id,
+					user_id: playlist.user_id,
+					playlist_name: playlist.playlist_name,
+					creation_date_time: playlist.creation_date_time,
+					last_updated_date_time: playlist.last_updated_date_time,
+					is_playlist_combined: playlist.is_playlist_combined,
+				})
+				.collect();
 
 			SearchResponse {
 				songs: music_results,
 				people: people_results,
-				playlists: playlist_results,
+				playlists: playlists_response,
 			}
 		}
 		"title" | "album" | "artist" => {
@@ -190,10 +201,10 @@ pub async fn search(State(app_state): State<AppState>, Query(params): Query<Sear
 
 			let playlist_response = sorted_results
 				.into_iter()
-				.map(|(entry, _)| Playlist {
+				.map(|(entry, _)| PlaylistInfo {
 					playlist_id: entry.playlist_id,
-					playlist_name: entry.playlist_name,
 					user_id: entry.user_id,
+					playlist_name: entry.playlist_name,
 					creation_date_time: entry.creation_date_time,
 					last_updated_date_time: entry.last_updated_date_time,
 					is_playlist_combined: entry.is_playlist_combined,

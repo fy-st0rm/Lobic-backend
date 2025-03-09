@@ -5,7 +5,7 @@ use crate::mail::otp_mail::otp_mail;
 use crate::schema::users;
 
 use axum::{
-	extract::{Path, Query, State},
+	extract::{Path, State},
 	http::status::StatusCode,
 	response::Response,
 	Json,
@@ -15,7 +15,6 @@ use diesel::prelude::*;
 use rand::Rng;
 use serde::Deserialize;
 use std::str::FromStr;
-
 
 pub async fn is_verified(State(app_state): State<AppState>, Path(user_id): Path<String>) -> Response<String> {
 	let mut db_conn = match app_state.db_pool.get() {
@@ -72,7 +71,6 @@ pub async fn is_verified(State(app_state): State<AppState>, Path(user_id): Path<
 		.body("OTP not verified".to_string())
 		.unwrap();
 }
-
 
 #[derive(Debug, Deserialize)]
 pub struct VerifyOTPPayload {

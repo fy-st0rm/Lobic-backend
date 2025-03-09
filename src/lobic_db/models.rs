@@ -45,6 +45,21 @@ pub struct Playlist {
 	pub last_updated_date_time: String,
 	pub is_playlist_combined: bool,
 }
+//for response
+#[derive(Debug, Serialize)]
+pub struct PlaylistInfo {
+	pub playlist_id: String,
+	pub user_id: String,
+	pub playlist_name: String,
+	pub creation_date_time: String,
+	pub last_updated_date_time: String,
+	pub is_playlist_combined: bool,
+}
+#[derive(Debug, Serialize)]
+pub struct UserPlaylistsResponse {
+	pub user_id: String,
+	pub playlists: Vec<PlaylistInfo>,
+}
 
 #[derive(Insertable, Queryable, Debug)]
 #[diesel(table_name = playlist_songs)]

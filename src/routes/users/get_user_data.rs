@@ -1,5 +1,4 @@
 use crate::core::app_state::AppState;
-use crate::lobic_db::db::*;
 use crate::lobic_db::models::User;
 use crate::schema::users;
 
@@ -9,8 +8,8 @@ use axum::{
 	response::Response,
 };
 use diesel::prelude::*;
-use serde_json::json;
 use serde::Deserialize;
+use serde_json::json;
 
 #[derive(Deserialize)]
 pub struct GetUserDataQuery {
@@ -20,7 +19,7 @@ pub struct GetUserDataQuery {
 
 pub async fn get_user_data(
 	State(app_state): State<AppState>,
-	Query(params): Query<GetUserDataQuery>
+	Query(params): Query<GetUserDataQuery>,
 ) -> Response<String> {
 	let mut db_conn = match app_state.db_pool.get() {
 		Ok(conn) => conn,
@@ -39,9 +38,7 @@ pub async fn get_user_data(
 			.filter(users::user_id.eq(&user_id))
 			.first::<User>(&mut db_conn)
 	} else if let Some(email) = params.email {
-		users::table
-			.filter(users::email.eq(&email))
-			.first::<User>(&mut db_conn)
+		users::table.filter(users::email.eq(&email)).first::<User>(&mut db_conn)
 	} else {
 		return Response::builder()
 			.status(StatusCode::BAD_REQUEST)
@@ -57,14 +54,11 @@ pub async fn get_user_data(
 				"email": user.email,
 			})
 			.to_string();
-			Response::builder()
-				.status(StatusCode::OK)
-				.body(user_data)
-				.unwrap()
-		},
+			Response::builder().status(StatusCode::OK).body(user_data).unwrap()
+		}
 		Err(err) => Response::builder()
 			.status(StatusCode::BAD_REQUEST)
 			.body(format!("No user found: {err}"))
-			.unwrap()
+			.unwrap(),
 	}
 }

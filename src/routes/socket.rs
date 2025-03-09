@@ -5,6 +5,8 @@ use crate::core::{
 	user_pool::UserPool,
 };
 use crate::lobic_db::db::*;
+use crate::lobic_db::models::UserFriendship;
+use crate::schema::user_friendship;
 
 use axum::{
 	extract::ws::{Message, WebSocket, WebSocketUpgrade},
@@ -15,6 +17,7 @@ use futures::{sink::SinkExt, stream::StreamExt};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use tokio::sync::broadcast;
+use diesel::prelude::*;
 
 // :socket
 pub async fn websocket_handler(ws: WebSocketUpgrade, State(app_state): State<AppState>) -> impl IntoResponse {
@@ -57,7 +60,7 @@ pub async fn handle_socket(socket: WebSocket, State(app_state): State<AppState>)
 					OpCode::CREATE_LOBBY => handle_create_lobby(payload.value, &db_pool, &lobby_pool, &user_pool),
 					OpCode::JOIN_LOBBY => handle_join_lobby(payload.value, &db_pool, &lobby_pool, &user_pool),
 					OpCode::LEAVE_LOBBY => handle_leave_lobby(payload.value, &db_pool, &lobby_pool, &user_pool),
-					OpCode::GET_LOBBY_IDS => handle_get_lobby_ids(&lobby_pool),
+					OpCode::GET_LOBBY_IDS => handle_get_lobby_ids(payload.value, &db_pool, &lobby_pool),
 					OpCode::GET_LOBBY_MEMBERS => handle_get_lobby_members(payload.value, &lobby_pool),
 					OpCode::MESSAGE => handle_message(payload.value, &db_pool, &lobby_pool, &user_pool),
 					OpCode::GET_MESSAGES => handle_get_messages(payload.value, &lobby_pool),
@@ -181,18 +184,35 @@ fn handle_create_lobby(
 		value: res,
 	};
 
-	// TODO: Broadcast to friends only
-	// Broadcasting to every clients
-	let conns = user_pool.get_conns();
-	for conn in conns {
-		let ids = lobby_pool.get_ids();
-		let response = SocketResponse {
-			op_code: OpCode::OK,
-			r#for: OpCode::GET_LOBBY_IDS,
-			value: ids.into(),
+	// Getting db connection
+	let mut db_conn = db_pool.get().unwrap();
+
+	// Loading the friendship of the host
+	let friendships = user_friendship::table
+		.filter(user_friendship::user_id.eq(&payload.host_id))
+		.load::<UserFriendship>(&mut db_conn)
+		.unwrap();
+
+	// Collecting all the friends ids
+	let friends: Vec<String> = friendships
+		.iter()
+		.map(|f| f.friend_id.clone())
+		.collect();
+
+	// Broadcasting to friends
+	let user_ids = user_pool.get_ids();
+	for user_id in user_ids {
+		if friends.contains(&user_id) {
+			let conn = user_pool.get(&user_id).unwrap();
+			let ids = lobby_pool.get_ids_with_rel(user_id.clone(), db_pool);
+			let response = SocketResponse {
+				op_code: OpCode::OK,
+				r#for: OpCode::GET_LOBBY_IDS,
+				value: ids.into(),
+			}
+			.to_string();
+			let _ = conn.send(Message::Text(response));
 		}
-		.to_string();
-		let _ = conn.send(Message::Text(response));
 	}
 
 	Ok(response)
@@ -248,18 +268,35 @@ fn handle_leave_lobby(
 	if lobby.host_id == payload.user_id {
 		res = lobby_pool.delete_lobby(&payload.lobby_id, user_pool);
 
-		// TODO: Broadcast to friends only
-		// Broadcasting to all the users
-		let conns = user_pool.get_conns();
-		for conn in conns {
-			let ids = lobby_pool.get_ids();
-			let response = SocketResponse {
-				op_code: OpCode::OK,
-				r#for: OpCode::GET_LOBBY_IDS,
-				value: ids.into(),
+		// Getting db connection
+		let mut db_conn = db_pool.get().unwrap();
+
+		// Loading the friendship of the host
+		let friendships = user_friendship::table
+			.filter(user_friendship::user_id.eq(&payload.user_id))
+			.load::<UserFriendship>(&mut db_conn)
+			.unwrap();
+
+		// Collecting all the friends ids
+		let friends: Vec<String> = friendships
+			.iter()
+			.map(|f| f.friend_id.clone())
+			.collect();
+
+		// Broadcasting to friends
+		let user_ids = user_pool.get_ids();
+		for user_id in user_ids {
+			if friends.contains(&user_id) {
+				let conn = user_pool.get(&user_id).unwrap();
+				let ids = lobby_pool.get_ids_with_rel(user_id.clone(), db_pool);
+				let response = SocketResponse {
+					op_code: OpCode::OK,
+					r#for: OpCode::GET_LOBBY_IDS,
+					value: ids.into(),
+				}
+				.to_string();
+				let _ = conn.send(Message::Text(response));
 			}
-			.to_string();
-			let _ = conn.send(Message::Text(response));
 		}
 	} else {
 		res = lobby_pool.leave_lobby(&payload.lobby_id, &payload.user_id, db_pool, user_pool);
@@ -276,8 +313,14 @@ fn handle_leave_lobby(
 }
 
 // :get_lobby_ids
-fn handle_get_lobby_ids(lobby_pool: &LobbyPool) -> Result<SocketResponse, String> {
-	let ids = lobby_pool.get_ids();
+#[derive(Serialize, Deserialize)]
+struct GetLobbyIdsPayload {
+	pub user_id: String,
+}
+
+fn handle_get_lobby_ids(value: Value, db_pool: &DatabasePool, lobby_pool: &LobbyPool) -> Result<SocketResponse, String> {
+	let payload: GetLobbyIdsPayload = serde_json::from_value(value).map_err(|x| x.to_string())?;
+	let ids = lobby_pool.get_ids_with_rel(payload.user_id, db_pool);
 	let response = SocketResponse {
 		op_code: OpCode::OK,
 		r#for: OpCode::GET_LOBBY_IDS,

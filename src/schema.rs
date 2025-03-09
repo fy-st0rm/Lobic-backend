@@ -42,7 +42,6 @@ diesel::table! {
     playlist_shares (playlist_id, contributor_user_id) {
         playlist_id -> Text,
         contributor_user_id -> Text,
-        is_writable -> Bool,
     }
 }
 

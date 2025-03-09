@@ -9,7 +9,6 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize)]
 pub struct Contributor {
 	contributor_user_id: String,
-	is_writable: bool,
 }
 
 #[derive(Serialize)]
@@ -56,19 +55,14 @@ pub async fn fetch_all_contributors(
 		}
 	};
 
-	// Fetch all contributors and their `is_writable` flag for the given playlist_id
 	let contributors = match playlist_shares::table
 		.filter(playlist_shares::playlist_id.eq(&payload.playlist_id))
-		.filter(playlist_shares::contributor_user_id.is_not_null())
-		.select((playlist_shares::contributor_user_id, playlist_shares::is_writable))
-		.load::<(String, bool)>(&mut db_conn)
+		.select(playlist_shares::contributor_user_id)
+		.load::<String>(&mut db_conn)
 	{
 		Ok(contributors) => contributors
 			.into_iter()
-			.map(|(contributor_user_id, is_writable)| Contributor {
-				contributor_user_id,
-				is_writable,
-			})
+			.map(|contributor_user_id| Contributor { contributor_user_id })
 			.collect(),
 		Err(err) => {
 			let msg = format!("Failed to fetch contributors: {err}");

@@ -75,7 +75,6 @@ pub struct PlaylistSong {
 pub struct PlaylistShare {
 	pub playlist_id: String,
 	pub contributor_user_id: String,
-	pub is_writable: bool,
 }
 
 #[derive(Insertable, Queryable, Debug)]

@@ -48,7 +48,7 @@ CREATE TABLE playlist_songs (
 CREATE TABLE playlist_shares (
 	playlist_id TEXT NOT NULL REFERENCES playlists(playlist_id),
 	contributor_user_id TEXT NOT NULL REFERENCES users(user_id),
-	is_writable BOOLEAN NOT NULL,
+	--every contributor is the admin
 	PRIMARY KEY (playlist_id,contributor_user_id)
 );
 

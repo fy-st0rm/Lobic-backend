@@ -2,6 +2,8 @@ use crate::core::app_state::AppState;
 use crate::lobic_db::models::Playlist;
 use crate::lobic_db::models::PlaylistInfo;
 use crate::lobic_db::models::UserPlaylistsResponse;
+use crate::schema::playlist_shares;
+use crate::schema::playlists;
 use axum::{extract::Query, extract::State, http::status::StatusCode, response::Response};
 use diesel::prelude::*;
 use serde::Deserialize;
@@ -36,10 +38,19 @@ pub async fn get_users_playlists(
 		}
 	};
 
-	use crate::schema::playlists::dsl::*;
-
 	// Query all playlists for the given user_id
-	let result = playlists.filter(user_id.eq(&user_uuid)).load::<Playlist>(&mut db_conn);
+	// let result = playlists.filter(user_id.eq(&user_uuid)).load::<Playlist>(&mut db_conn);
+
+	let result = playlists::table
+		.left_join(playlist_shares::table.on(playlists::playlist_id.eq(playlist_shares::playlist_id)))
+		.filter(
+			playlists::user_id
+				.eq(&user_uuid) // Owned playlists
+				.or(playlist_shares::contributor_user_id.eq(&user_uuid)), // Shared with user as contributor
+		)
+		.select(playlists::all_columns) // Explicitly select only playlists table columns
+		.distinct() // Add this to avoid duplicate results
+		.load::<Playlist>(&mut db_conn);
 
 	match result {
 		Ok(user_playlists) => {

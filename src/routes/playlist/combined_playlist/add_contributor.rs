@@ -33,18 +33,15 @@ pub async fn add_contributor(
 		}
 	};
 
-	if is_combined {
+	if !is_combined {
 		return Response::builder()
 			.status(StatusCode::BAD_REQUEST)
-			.body("Cannot add contributors to a combined playlist".to_string())
+			.body("Cannot add contributors to a solo playlist".to_string())
 			.unwrap();
 	}
 
 	match diesel::insert_into(playlist_shares::table)
 		.values(&payload)
-		.on_conflict((playlist_shares::playlist_id, playlist_shares::contributor_user_id))
-		.do_update()
-		.set(playlist_shares::is_writable.eq(payload.is_writable))
 		.execute(&mut db_conn)
 	{
 		Ok(_) => Response::builder()

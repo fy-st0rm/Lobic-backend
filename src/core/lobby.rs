@@ -4,7 +4,10 @@ use crate::lobic_db::db::*;
 use crate::lobic_db::models::Notification;
 use crate::routes::notify::notify;
 use crate::utils::timestamp;
+use crate::lobic_db::models::UserFriendship;
+use crate::schema::user_friendship;
 
+use diesel::prelude::*;
 use axum::extract::ws::Message;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -86,6 +89,36 @@ impl LobbyPool {
 	pub fn get_ids(&self) -> Vec<String> {
 		let inner = self.inner.lock().unwrap();
 		inner.clone().into_keys().collect()
+	}
+
+	// Retrives the ids of lobby in which host is there friend
+	pub fn get_ids_with_rel(&self, user_id: String, db_pool: &DatabasePool) -> Vec<String> {
+		let mut db_conn = db_pool.get().unwrap();
+
+		let mut lobby_ids: Vec<String> = Vec::new();
+
+		let inner = self.inner.lock().unwrap();
+		for (lobby_id, lobby) in inner.clone().into_iter() {
+			let host_id = lobby.host_id;
+
+			// Loading the friendship of the host
+			let friendships = user_friendship::table
+				.filter(user_friendship::user_id.eq(&host_id))
+				.load::<UserFriendship>(&mut db_conn)
+				.unwrap();
+
+			// Collecting all the friends ids
+			let friends: Vec<String> = friendships
+				.iter()
+				.map(|f| f.friend_id.clone())
+				.collect();
+
+			if friends.contains(&user_id) {
+				lobby_ids.push(lobby_id);
+			}
+		}
+
+		return lobby_ids;
 	}
 
 	pub fn get(&self, key: &str) -> Option<Lobby> {

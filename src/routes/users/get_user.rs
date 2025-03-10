@@ -64,7 +64,7 @@ pub async fn get_user(jar: CookieJar) -> Response<String> {
 				}
 			};
 
-			let access_cookie = cookie::create("access_token", &access_token, 60 * 60, true);
+			let access_cookie = cookie::create("access_token", &access_token, 60 * 60);
 			let response = json!({
 			"user_id": claims.id
 			})

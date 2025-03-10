@@ -1,13 +1,18 @@
 use axum::http::{request::Parts, HeaderValue};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use local_ip_address::local_ip;
 
-pub const IP: &str = "127.0.0.1";
+pub fn server_ip() -> String {
+	return local_ip().unwrap().to_string();
+}
+
 pub const PORT: &str = "8080";
 pub const COVER_IMG_STORAGE: &str = "./storage/cover_images";
 pub const MUSIC_STORAGE: &str = "./storage/music_db";
 pub const USER_PFP_STORAGE: &str = "./storage/users_pfps";
 pub const PLAYLIST_COVER_IMG_STORAGE: &str = "./storage/playlists_cover_img";
+pub const DEV: bool = true;
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub enum OpCode {
@@ -60,15 +65,20 @@ pub enum MusicState {
 }
 
 pub fn allowed_origins(origin: &HeaderValue, _request: &Parts) -> bool {
-	let origins = [
-		"http://localhost:5173",
-		"http://127.0.0.1:5173",
-		"http://localhost:5174",
-		"http://127.0.0.1:5174",
-		"http://localhost:5175",
-		"http://127.0.0.1:5175",
+	let mut origins = Vec::new();
+	let ips = [
+		"localhost",
+		"127.0.0.1",
+		&server_ip(),
 	];
-	origins.iter().any(|&allowed| origin == allowed)
+
+	for port in 5173..5175 {
+		for ip in ips {
+			let origin = format!("http://{}:{}", ip, port);
+			origins.push(origin);
+		}
+	}
+	origins.iter().any(|allowed| *origin == *allowed)
 }
 
 // Structure for WebSocket

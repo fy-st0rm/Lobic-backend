@@ -17,9 +17,9 @@ pub struct LogoutPayload {
 pub async fn logout(State(app_state): State<AppState>, Json(payload): Json<LogoutPayload>) -> Response<String> {
 	let _ = app_state.user_pool.remove(&payload.user_id);
 
-	let user_cookie = cookie::create("user_id", "", 0, false);
-	let access_cookie = cookie::create("access_token", "", 0, true);
-	let refresh_cookie = cookie::create("refresh_token", "", 0, true);
+	let user_cookie = cookie::create("user_id", "", 0);
+	let access_cookie = cookie::create("access_token", "", 0);
+	let refresh_cookie = cookie::create("refresh_token", "", 0);
 
 	Response::builder()
 		.status(StatusCode::OK)

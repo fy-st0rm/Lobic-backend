@@ -86,9 +86,9 @@ pub async fn login(State(app_state): State<AppState>, Json(payload): Json<LoginP
 	};
 
 	// Create cookies for access and refresh tokens
-	let user_cookie = cookie::create("user_id", &user.user_id, 60 * 60, true);
-	let access_cookie = cookie::create("access_token", &access_token, 60 * 60, true);
-	let refresh_cookie = cookie::create("refresh_token", &refresh_token, 7 * 24 * 60 * 60, true);
+	let user_cookie = cookie::create("user_id", &user.user_id, 60 * 60);
+	let access_cookie = cookie::create("access_token", &access_token, 60 * 60);
+	let refresh_cookie = cookie::create("refresh_token", &refresh_token, 7 * 24 * 60 * 60);
 
 	Response::builder()
 		.status(StatusCode::OK)

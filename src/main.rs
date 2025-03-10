@@ -1,8 +1,3 @@
-/*
-* TODO:
-* [ ] Implement auto deletion when host disconnects
-*/
-
 use std::fs;
 use std::path::Path;
 
@@ -14,7 +9,7 @@ mod routes;
 mod schema;
 mod utils;
 
-use config::{COVER_IMG_STORAGE, IP, MUSIC_STORAGE, PLAYLIST_COVER_IMG_STORAGE, PORT, USER_PFP_STORAGE};
+use config::{COVER_IMG_STORAGE, server_ip, MUSIC_STORAGE, PLAYLIST_COVER_IMG_STORAGE, PORT, USER_PFP_STORAGE};
 use core::{app_state::AppState, migrations::run_migrations};
 use dotenv::dotenv;
 
@@ -34,7 +29,7 @@ async fn main() {
 		.layer(axum::middleware::from_fn(core::server::logger))
 		.layer(core::server::configure_cors());
 
-	core::server::start_server(app, &IP, &PORT).await;
+	core::server::start_server(app, &server_ip(), &PORT).await;
 }
 
 fn create_storage_directories() -> std::io::Result<()> {

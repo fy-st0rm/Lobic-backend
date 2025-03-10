@@ -56,7 +56,7 @@ pub async fn verify(jar: CookieJar) -> Response<String> {
 			// Generating new access token
 			let access_claims = jwt::Claims {
 				id: claims.id.clone(),
-				exp: exp::expiration_from_sec(10),
+				exp: exp::expiration_from_min(60),
 			};
 			let access_token = match jwt::generate(access_claims, &secret_key) {
 				Ok(token) => token,

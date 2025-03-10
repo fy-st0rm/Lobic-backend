@@ -112,13 +112,13 @@ pub async fn handle_socket(socket: WebSocket, State(app_state): State<AppState>)
 		}
 
 		// If the user suddenly disconnects, disconnect the user from the lobby
-		if let Some(lobby_id) = curr_lobby_id {
-			let payload = json!({
-				"lobby_id": lobby_id,
-				"user_id": user_id.unwrap(),
-			});
-			let _ = handle_leave_lobby(payload, &db_pool, &lobby_pool, &user_pool);
-		}
+		// if let Some(lobby_id) = curr_lobby_id {
+		// 	let payload = json!({
+		// 		"lobby_id": lobby_id,
+		// 		"user_id": user_id.unwrap(),
+		// 	});
+		// 	let _ = handle_leave_lobby(payload, &db_pool, &lobby_pool, &user_pool);
+		// }
 	});
 
 	// Sending msg through sockets

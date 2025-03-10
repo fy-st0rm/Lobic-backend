@@ -98,12 +98,10 @@ pub async fn verify_email(State(app_state): State<AppState>, Path(id): Path<Stri
 		}
 	};
 
-	let query = users::table.filter(users::user_id.eq(id)).first::<User>(&mut db_conn);
-
-	let res = match query {
-		Ok(user) => user.email_verified,
-		Err(_) => false,
-	};
+	let res = users::table.filter(users::user_id.eq(id))
+		.first::<User>(&mut db_conn)
+		.unwrap()
+		.email_verified;
 
 	if res {
 		return Response::builder()

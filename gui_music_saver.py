@@ -4,6 +4,12 @@ import json
 from urllib import request
 from urllib.error import URLError
 from tkinter import messagebox
+import socket
+
+# Getting server ip
+s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+s.connect(("8.8.8.8", 80))
+server_ip = s.getsockname()[0]
 
 
 #you might think that this is obselete or we dont need bloated python to corrupt our state of the art rust eco system,  but i dont care what you think!
@@ -19,7 +25,7 @@ def submit_folder(folder_path):
     try:
         data = json.dumps({'path': folder_path}).encode('utf-8')
         req = request.Request(
-            'http://127.0.0.1:8080/save_music',
+            f'http://{server_ip}:8080/save_music',
             data=data,
             headers={'Content-Type': 'application/json'}
         )

@@ -2,12 +2,12 @@ use crate::{
 	core::app_state::AppState,
 	routes::{
 		auth::{
+			change_password::change_password,
 			login::login,
 			logout::logout,
-			otp::{resend_otp, verify_otp, is_verified},
+			otp::{is_verified, resend_otp, verify_otp},
 			signup::signup,
 			verify::{verify, verify_email},
-			change_password::change_password,
 		},
 		get_lobby::get_lobby,
 		music::{
@@ -46,8 +46,8 @@ use crate::{
 		search::search,
 		socket::websocket_handler,
 		users::{
-			add_friend::add_friend, get_friend::get_friend, get_user::get_user, get_user_data::get_user_data, get_user_pfp::get_user_pfp,
-			remove_friend::remove_friend, search_user::search_user, update_pfp::update_pfp,
+			add_friend::add_friend, get_friend::get_friend, get_user::get_user, get_user_data::get_user_data,
+			get_user_pfp::get_user_pfp, remove_friend::remove_friend, search_user::search_user, update_pfp::update_pfp,
 		},
 	},
 };
@@ -110,7 +110,10 @@ pub fn configure_routes(app_state: AppState) -> Router {
 		//combined playlists
 		.route("/playlist/combined/add_contributor", post(add_contributor))
 		.route("/playlist/combined/remove_contributor", post(remove_contributor))
-		.route("/playlist/combined/fetch_contributors", get(fetch_all_contributors))
+		.route(
+			"/playlist/combined/fetch_all_contributors/:playlist_id",
+			get(fetch_all_contributors),
+		)
 		//user stuff
 		.route("/user/update_pfp", post(update_pfp)) // @TODO :support non png image
 		.route("/user/get_pfp/:filename", get(get_user_pfp)) // @TODO : support non png

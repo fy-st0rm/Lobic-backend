@@ -1,10 +1,10 @@
 use crate::core::app_state::AppState;
 use crate::schema::playlist_shares;
 use crate::schema::playlists;
-use axum::Json;
+use axum::extract::Path;
 use axum::{extract::State, http::status::StatusCode, response::Response};
 use diesel::prelude::*;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
 #[derive(Serialize)]
 pub struct Contributor {
@@ -17,14 +17,9 @@ pub struct FetchContributorsResponse {
 	contributors: Vec<Contributor>,
 }
 
-#[derive(Deserialize)]
-pub struct FetchContributorsPayload {
-	playlist_id: String,
-}
-
 pub async fn fetch_all_contributors(
 	State(app_state): State<AppState>,
-	Json(payload): Json<FetchContributorsPayload>,
+	Path(playlist_id): Path<String>,
 ) -> Response<String> {
 	// Attempt to get a database connection from the pool
 	let mut db_conn = match app_state.db_pool.get() {
@@ -40,7 +35,7 @@ pub async fn fetch_all_contributors(
 
 	// Fetch the playlist owner
 	let playlist_owner: Result<String, diesel::result::Error> = playlists::table
-		.filter(playlists::playlist_id.eq(&payload.playlist_id))
+		.filter(playlists::playlist_id.eq(&playlist_id))
 		.select(playlists::user_id)
 		.first(&mut db_conn);
 
@@ -56,7 +51,7 @@ pub async fn fetch_all_contributors(
 	};
 
 	let contributors = match playlist_shares::table
-		.filter(playlist_shares::playlist_id.eq(&payload.playlist_id))
+		.filter(playlist_shares::playlist_id.eq(&playlist_id))
 		.select(playlist_shares::contributor_user_id)
 		.load::<String>(&mut db_conn)
 	{
